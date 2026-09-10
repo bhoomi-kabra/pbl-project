@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nashik Roads & Civic Monitor - PPT System Flow (16:9)</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #111827;
+      color: #f8fafc;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .toolbar {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    .btn {
+      background: #044335;
+      color: #e6f7f2;
+      border: 1px solid #0d6e59;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      background: #0d6e59;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    .slide-wrapper {
+      width: 100%;
+      max-width: 1600px;
+      aspect-ratio: 16 / 9;
+      background: #fafcfb;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+    @media print {
+      body {
+        background: none;
+        padding: 0;
+      }
+      .toolbar {
+        display: none;
+      }
+      .slide-wrapper {
+        box-shadow: none;
+        border-radius: 0;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <button class="btn" onclick="window.print()">🖨️ Print Slide / Export PDF</button>
+    <button class="btn" onclick="downloadSVG()">📥 Download 16:9 Vector SVG</button>
+  </div>
+
+  <div class="slide-wrapper">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" style="background-color: #fafcfb; font-family: 'Montserrat', 'Segoe UI', system-ui, -apple-system, sans-serif;">
+  <defs>
+    <!-- Shadow Filters -->
+    <filter id="cardShadow" x="-10%" y="-10%" width="125%" height="125%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#04392e" flood-opacity="0.06"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#04392e" flood-opacity="0.04"/>
+    </filter>
+
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="40" result="blur" />
+    </filter>
+
+    <!-- Linear Gradients for Step Headers -->
+    <linearGradient id="mintGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#044335"/>
+      <stop offset="100%" stop-color="#0d6e59"/>
+    </linearGradient>
+
+    <linearGradient id="peachGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c25e38"/>
+      <stop offset="100%" stop-color="#d9774a"/>
+    </linearGradient>
+
+    <!-- Arrow Markers -->
+    <marker id="arrow-mint" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0d6e59" />
+    </marker>
+    
+    <marker id="arrow-peach" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#d9774a" />
+    </marker>
+  </defs>
+
+  <!-- ================= BACKGROUND SLIDE GRAPHICS ================= -->
+  <!-- Base Background -->
+  <rect width="1920" height="1080" fill="#fafcfb" />
+
+  <!-- Left Mint Polygon Background Badge (Matching PPT style) -->
+  <path d="M 0,0 L 980,0 L 860,540 L 0,540 Z" fill="#e6f7f2" opacity="0.85"/>
+
+  <!-- Right Peach Polygon Background Badge (Matching PPT style) -->
+  <path d="M 1150,420 L 1920,320 L 1920,1080 L 1000,1080 Z" fill="#fdf0e6" opacity="0.85"/>
+
+  <!-- Soft Decorative Orbs -->
+  <circle cx="820" cy="880" r="110" fill="#cbf2e5" opacity="0.6" filter="url(#softGlow)"/>
+  <circle cx="1780" cy="220" r="85" fill="#fce4d6" opacity="0.7" filter="url(#softGlow)"/>
+
+  <!-- ================= TOP SLIDE HEADER ================= -->
+  <!-- Main Slide Title -->
+  <text x="90" y="90" fill="#00382b" font-size="40" font-weight="800" letter-spacing="-0.5">Nashik Roads &amp; Civic Monitor</text>
+  <text x="90" y="130" fill="#065f46" font-size="22" font-weight="600">End-to-End Architectural System Flow Pipeline</text>
+  
+  <!-- Subtitle Text under header (PPT style) -->
+  <text x="90" y="165" fill="#4b635c" font-size="15" font-weight="400">Automated Grievance Lifecycle: Hazard Detection ➔ AI Classification ➔ Real-Time GIS ➔ Field SLA ➔ Citizen Audit</text>
+
+  <!-- Top Right Page Indicator (Matching PPT style) -->
+  <text x="1800" y="80" fill="#00382b" font-size="16" font-weight="500" text-anchor="end">Page</text>
+  <text x="1800" y="122" fill="#00382b" font-size="44" font-weight="800" text-anchor="end">03</text>
+
+
+  <!-- ================= PIPELINE STEP CARDS (7 STEPS IN 2 ROWS) ================= -->
+
+  <!-- ROW 1: STEPS 1 TO 4 -->
+
+  <!-- STEP 1: HAZARD INTAKE -->
+  <g transform="translate(90, 205)">
+    <!-- Card Container -->
+    <rect width="380" height="340" rx="16" fill="#ffffff" stroke="#cbe5dc" stroke-width="1.5" filter="url(#cardShadow)"/>
+    <!-- Top Step Badge -->
+    <path d="M 0,16 A 16,16 0 0,1 16,0 L 364,0 A 16,16 0 0,1 380,16 L 380,52 L 0,52 Z" fill="url(#mintGrad)" />
+    <text x="25" y="33" fill="#ffffff" font-size="13" font-weight="800" letter-spacing="1">STEP 01</text>
+    <text x="100" y="33" fill="#d1fae5" font-size="15" font-weight="700">Hazard Detection &amp; Intake</text>
+    
+    <!-- Card Body Content -->
+    <text x="25" y="85" fill="#00382b" font-size="16" font-weight="700">Multi-Channel Input Options:</text>
+
+    <!-- Option A -->
+    <rect x="25" y="102" width="330" height="60" rx="8" fill="#f2fcf8" stroke="#d0ebd7" stroke-width="1"/>
+    <text x="40" y="125" fill="#044335" font-size="13" font-weight="700">🤖 Option A: AI Chatbot Intake</text>
+    <text x="40" y="145" fill="#374151" font-size="11">"Sparking wire near K.K. Wagh, Panchavati"</text>
+
+    <!-- Option B -->
+    <rect x="25" y="172" width="330" height="60" rx="8" fill="#f2fcf8" stroke="#d0ebd7" stroke-width="1"/>
+    <text x="40" y="195" fill="#044335" font-size="13" font-weight="700">🗺️ Option B: GIS Click-to-Pin</text>
+    <text x="40" y="215" fill="#374151" font-size="11">Direct GPS coordinate pin selection on Leaflet</text>
+
+    <!-- Option C -->
+    <rect x="25" y="242" width="330" height="60" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+    <text x="40" y="265" fill="#9a3412" font-size="13" font-weight="700">🌩️ Option C: System Alert Triggers</text>
+    <text x="40" y="285" fill="#4b5563" font-size="11">OpenWeather Precipitation &amp; Monsoon Risk</text>
+  </g>
+
+  <!-- Arrow Step 1 -> Step 2 -->
+  <line x1="475" y1="375" x2="520" y2="375" stroke="#0d6e59" stroke-width="3" marker-end="url(#arrow-mint)" />
+
+
+  <!-- STEP 2: AI CLASSIFIER & GEOFENCING -->
+  <g transform="translate(530, 205)">
+    <rect width="380" height="340" rx="16" fill="#ffffff" stroke="#cbe5dc" stroke-width="1.5" filter="url(#cardShadow)"/>
+    <path d="M 0,16 A 16,16 0 0,1 16,0 L 364,0 A 16,16 0 0,1 380,16 L 380,52 L 0,52 Z" fill="url(#mintGrad)" />
+    <text x="25" y="33" fill="#ffffff" font-size="13" font-weight="800" letter-spacing="1">STEP 02</text>
+    <text x="100" y="33" fill="#d1fae5" font-size="15" font-weight="700">AI Classification &amp; Geofence</text>
+
+    <text x="25" y="85" fill="#00382b" font-size="16" font-weight="700">Automated Smart Pipeline:</text>
+
+    <rect x="25" y="102" width="330" height="60" rx="8" fill="#f2fcf8" stroke="#d0ebd7" stroke-width="1"/>
+    <text x="40" y="125" fill="#044335" font-size="13" font-weight="700">🧠 AI Hazard Intent Classifier</text>
+    <text x="40" y="145" fill="#059669" font-size="11" font-weight="600">ELECTRICAL_HAZARD (98% Confidence)</text>
+
+    <rect x="25" y="172" width="330" height="60" rx="8" fill="#f2fcf8" stroke="#d0ebd7" stroke-width="1"/>
+    <text x="40" y="195" fill="#044335" font-size="13" font-weight="700">📍 PostGIS Ward Resolver</text>
+    <text x="40" y="215" fill="#374151" font-size="11">Maps GPS to 6 Wards (e.g. Ward 1: Panchavati)</text>
+
+    <rect x="25" y="242" width="330" height="60" rx="8" fill="#f2fcf8" stroke="#d0ebd7" stroke-width="1"/>
+    <text x="40" y="265" fill="#044335" font-size="13" font-weight="700">🔗 Auto-Filled Deep Routing</text>
+    <text x="40" y="285" fill="#374151" font-size="11">Pre-fills category, ward, &amp; redirects user</text>
+  </g>
+
+  <!-- Arrow Step 2 -> Step 3 -->
+  <line x1="915" y1="375" x2="960" y2="375" stroke="#0d6e59" stroke-width="3" marker-end="url(#arrow-mint)" />
+
+
+  <!-- STEP 3: API & POSTGRESQL PERSISTENCE -->
+  <g transform="translate(970, 205)">
+    <rect width="380" height="340" rx="16" fill="#ffffff" stroke="#cbe5dc" stroke-width="1.5" filter="url(#cardShadow)"/>
+    <path d="M 0,16 A 16,16 0 0,1 16,0 L 364,0 A 16,16 0 0,1 380,16 L 380,52 L 0,52 Z" fill="url(#mintGrad)" />
+    <text x="25" y="33" fill="#ffffff" font-size="13" font-weight="800" letter-spacing="1">STEP 03</text>
+    <text x="100" y="33" fill="#d1fae5" font-size="15" font-weight="700">API Gateway &amp; Spatial DB</text>
+
+    <text x="25" y="85" fill="#00382b" font-size="16" font-weight="700">Data Persistence Layer:</text>
+
+    <rect x="25" y="102" width="330" height="60" rx="8" fill="#f2fcf8" stroke="#d0ebd7" stroke-width="1"/>
+    <text x="40" y="125" fill="#044335" font-size="13" font-weight="700">⚡ Node.js Express REST API</text>
+    <text x="40" y="145" fill="#374151" font-size="11">HTTP POST /api/complaints (Port 5000)</text>
+
+    <rect x="25" y="172" width="330" height="60" rx="8" fill="#f2fcf8" stroke="#d0ebd7" stroke-width="1"/>
+    <text x="40" y="195" fill="#044335" font-size="13" font-weight="700">🗄️ Supabase Cloud PostgreSQL</text>
+    <text x="40" y="215" fill="#374151" font-size="11">Relational tables for complaints &amp; contractors</text>
+
+    <rect x="25" y="242" width="330" height="60" rx="8" fill="#f2fcf8" stroke="#d0ebd7" stroke-width="1"/>
+    <text x="40" y="265" fill="#044335" font-size="13" font-weight="700">🗺️ PostGIS Spatial Indexing</text>
+    <text x="40" y="285" fill="#374151" font-size="11">ST_MakePoint(20.0180° N, 73.8180° E)</text>
+  </g>
+
+  <!-- Arrow Step 3 -> Step 4 -->
+  <line x1="1355" y1="375" x2="1400" y2="375" stroke="#0d6e59" stroke-width="3" marker-end="url(#arrow-mint)" />
+
+
+  <!-- STEP 4: REAL-TIME WEBSOCKET STREAM -->
+  <g transform="translate(1410, 205)">
+    <rect width="420" height="340" rx="16" fill="#ffffff" stroke="#cbe5dc" stroke-width="1.5" filter="url(#cardShadow)"/>
+    <path d="M 0,16 A 16,16 0 0,1 16,0 L 404,0 A 16,16 0 0,1 420,16 L 420,52 L 0,52 Z" fill="url(#mintGrad)" />
+    <text x="25" y="33" fill="#ffffff" font-size="13" font-weight="800" letter-spacing="1">STEP 04</text>
+    <text x="100" y="33" fill="#d1fae5" font-size="15" font-weight="700">Real-Time WebSocket Sync</text>
+
+    <text x="25" y="85" fill="#00382b" font-size="16" font-weight="700">Live Client Broadcast Engine:</text>
+
+    <rect x="25" y="102" width="370" height="60" rx="8" fill="#f2fcf8" stroke="#d0ebd7" stroke-width="1"/>
+    <text x="40" y="125" fill="#044335" font-size="13" font-weight="700">📡 Socket.io Event Broadcast</text>
+    <text x="40" y="145" fill="#374151" font-size="11">Emits 'new_complaint' event instantly</text>
+
+    <rect x="25" y="172" width="370" height="60" rx="8" fill="#f2fcf8" stroke="#d0ebd7" stroke-width="1"/>
+    <text x="40" y="195" fill="#044335" font-size="13" font-weight="700">🔴 Animated GIS Map Pin Drop</text>
+    <text x="40" y="215" fill="#374151" font-size="11">Leaflet pin drops live without page reload</text>
+
+    <rect x="25" y="242" width="370" height="60" rx="8" fill="#f2fcf8" stroke="#d0ebd7" stroke-width="1"/>
+    <text x="40" y="265" fill="#044335" font-size="13" font-weight="700">📊 Live KPI &amp; Banner Updates</text>
+    <text x="40" y="285" fill="#374151" font-size="11">+1 Counter increment &amp; Toast notifications</text>
+  </g>
+
+
+  <!-- Connecting Curved Connector Line from Step 4 down to Step 5 -->
+  <path d="M 1620,550 L 1620,580 A 20,20 0 0,1 1600,600 L 300,600 A 20,20 0 0,0 280,620 L 280,640" stroke="#d9774a" stroke-width="3" fill="none" stroke-dasharray="6 4" marker-end="url(#arrow-peach)"/>
+
+
+  <!-- ROW 2: STEPS 5 TO 7 (FIELD REPAIR, PROOF & CITIZEN AUDIT) -->
+
+  <!-- STEP 5: FIELD EXECUTION & DLP -->
+  <g transform="translate(90, 640)">
+    <rect width="500" height="340" rx="16" fill="#ffffff" stroke="#fed7aa" stroke-width="1.5" filter="url(#cardShadow)"/>
+    <path d="M 0,16 A 16,16 0 0,1 16,0 L 484,0 A 16,16 0 0,1 500,16 L 500,52 L 0,52 Z" fill="url(#peachGrad)" />
+    <text x="25" y="33" fill="#ffffff" font-size="13" font-weight="800" letter-spacing="1">STEP 05</text>
+    <text x="100" y="33" fill="#ffedd5" font-size="15" font-weight="700">Field Repair &amp; Contractor DLP</text>
+
+    <text x="25" y="85" fill="#7c2d12" font-size="16" font-weight="700">Ward Engineer Work Lifecycle:</text>
+
+    <!-- Lifecycle Pipeline Badges -->
+    <g transform="translate(25, 105)">
+      <rect width="140" height="55" rx="8" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+      <text x="70" y="25" fill="#991b1b" font-size="12" font-weight="700" text-anchor="middle">🔴 TRENCHING</text>
+      <text x="70" y="42" fill="#7f1d1d" font-size="10" text-anchor="middle">Road Digging Stage</text>
+
+      <rect x="150" width="140" height="55" rx="8" fill="#fef9c3" stroke="#fde047" stroke-width="1"/>
+      <text x="220" y="25" fill="#854d0e" font-size="12" font-weight="700" text-anchor="middle">🟡 CONCRETING</text>
+      <text x="220" y="42" fill="#713f12" font-size="10" text-anchor="middle">Base Repair Stage</text>
+
+      <rect x="300" width="145" height="55" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+      <text x="372" y="25" fill="#1e40af" font-size="12" font-weight="700" text-anchor="middle">🔵 WATER CURING</text>
+      <text x="372" y="42" fill="#1e3a8a" font-size="10" text-anchor="middle">Strength Period</text>
+    </g>
+
+    <rect x="25" y="175" width="450" height="60" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+    <text x="40" y="198" fill="#9a3412" font-size="13" font-weight="700">📋 Defect Liability Period (DLP) Audit</text>
+    <text x="40" y="218" fill="#4b5563" font-size="11">Tracks contractor 36-month warranty expiry dates</text>
+
+    <rect x="25" y="245" width="450" height="60" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+    <text x="40" y="268" fill="#9a3412" font-size="13" font-weight="700">🏗️ Assigned Ward Engineer Console</text>
+    <text x="40" y="288" fill="#4b5563" font-size="11">Manages task status across all 6 administrative wards</text>
+  </g>
+
+  <!-- Arrow Step 5 -> Step 6 -->
+  <line x1="595" y1="810" x2="640" y2="810" stroke="#d9774a" stroke-width="3" marker-end="url(#arrow-peach)" />
+
+
+  <!-- STEP 6: EVIDENCE & GEOTAG PROOF -->
+  <g transform="translate(650, 640)">
+    <rect width="480" height="340" rx="16" fill="#ffffff" stroke="#fed7aa" stroke-width="1.5" filter="url(#cardShadow)"/>
+    <path d="M 0,16 A 16,16 0 0,1 16,0 L 464,0 A 16,16 0 0,1 480,16 L 480,52 L 0,52 Z" fill="url(#peachGrad)" />
+    <text x="25" y="33" fill="#ffffff" font-size="13" font-weight="800" letter-spacing="1">STEP 06</text>
+    <text x="100" y="33" fill="#ffedd5" font-size="15" font-weight="700">Geotagged Evidence Upload</text>
+
+    <text x="25" y="85" fill="#7c2d12" font-size="16" font-weight="700">Compulsory Verification Proof:</text>
+
+    <rect x="25" y="105" width="430" height="60" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+    <text x="40" y="128" fill="#9a3412" font-size="13" font-weight="700">📷 "After Repair" Geotagged Photo Upload</text>
+    <text x="40" y="148" fill="#4b5563" font-size="11">Ward Engineer must submit photo before ticket audit</text>
+
+    <rect x="25" y="175" width="430" height="60" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+    <text x="40" y="198" fill="#9a3412" font-size="13" font-weight="700">📍 EXIF GPS Metadata Validation</text>
+    <text x="40" y="218" fill="#4b5563" font-size="11">Verifies photo location matches original hazard GPS</text>
+
+    <rect x="25" y="245" width="430" height="60" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+    <text x="40" y="268" fill="#9a3412" font-size="13" font-weight="700">🔄 State Change: EVIDENCE_UPLOADED</text>
+    <text x="40" y="288" fill="#4b5563" font-size="11">Triggers citizen audit alert for side-by-side verification</text>
+  </g>
+
+  <!-- Arrow Step 6 -> Step 7 -->
+  <line x1="1135" y1="810" x2="1180" y2="810" stroke="#d9774a" stroke-width="3" marker-end="url(#arrow-peach)" />
+
+
+  <!-- STEP 7: "CLOSED != RESOLVED" CITIZEN VERIFICATION AUDIT -->
+  <g transform="translate(1190, 640)">
+    <rect width="640" height="340" rx="16" fill="#ffffff" stroke="#0891b2" stroke-width="2" filter="url(#cardShadow)"/>
+    <path d="M 0,16 A 16,16 0 0,1 16,0 L 624,0 A 16,16 0 0,1 640,16 L 640,52 L 0,52 Z" fill="#0e7490" />
+    <text x="25" y="33" fill="#ffffff" font-size="13" font-weight="800" letter-spacing="1">STEP 07</text>
+    <text x="100" y="33" fill="#cffafe" font-size="15" font-weight="700">"Closed != Resolved" Citizen Audit Gate</text>
+
+    <text x="25" y="85" fill="#164e63" font-size="16" font-weight="700">Citizen Side-by-Side "Before vs After" Photo Audit:</text>
+
+    <!-- Option 1: Confirm -->
+    <g transform="translate(25, 105)">
+      <rect width="285" height="200" rx="12" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.5"/>
+      <text x="20" y="32" fill="#047857" font-size="15" font-weight="800">🟢 "I Confirm It's Fixed"</text>
+      <line x1="15" y1="42" x2="270" y2="42" stroke="#a7f3d0" stroke-width="1"/>
+      <text x="20" y="66" fill="#065f46" font-size="12" font-weight="700">Ticket Status:</text>
+      <text x="20" y="85" fill="#047857" font-size="12" font-weight="800">CLOSED_VERIFIED</text>
+
+      <text x="20" y="115" fill="#065f46" font-size="12" font-weight="700">SLA Resolution Rate:</text>
+      <text x="20" y="132" fill="#374151" font-size="11">Updated on NMC KPI Banner</text>
+
+      <text x="20" y="162" fill="#047857" font-size="12" font-weight="800">🎁 Gamification Award:</text>
+      <text x="20" y="180" fill="#059669" font-size="12" font-weight="700">+50 Civic Score Points</text>
+    </g>
+
+    <!-- Option 2: Reopen -->
+    <g transform="translate(330, 105)">
+      <rect width="285" height="200" rx="12" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+      <text x="20" y="32" fill="#b91c1c" font-size="15" font-weight="800">🔴 "Not Fixed Properly"</text>
+      <line x1="15" y1="42" x2="270" y2="42" stroke="#fca5a5" stroke-width="1"/>
+      <text x="20" y="66" fill="#991b1b" font-size="12" font-weight="700">Ticket Status:</text>
+      <text x="20" y="85" fill="#b91c1c" font-size="12" font-weight="800">REOPENED_ESCALATED</text>
+
+      <text x="20" y="115" fill="#991b1b" font-size="12" font-weight="700">High-Priority Alert:</text>
+      <text x="20" y="132" fill="#374151" font-size="11">Sent to NMC Chief Engineer</text>
+
+      <text x="20" y="162" fill="#b91c1c" font-size="12" font-weight="800">⚠️ Contractor Penalty:</text>
+      <text x="20" y="180" fill="#dc2626" font-size="11" font-weight="700">Warning against DLP deposit</text>
+    </g>
+  </g>
+
+
+  <!-- ================= BOTTOM RIGHT SLIDE FOOTER (Matching PPT style) ================= -->
+  <text x="1830" y="1030" fill="#00382b" font-size="15" font-weight="800" text-anchor="end" letter-spacing="1.5">SYSTEM ARCHITECTURE &amp; FLOW</text>
+
+</svg>
+
+  </div>
+
+  <script>
+    function downloadSVG() {
+      const svgContent = document.querySelector('svg').outerHTML;
+      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Nashik_Roads_PPT_System_Flow_16x9.svg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

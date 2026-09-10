@@ -1,28 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { WardName, Language, ThemeMode, CivicTicket, HazardType, RoadWorkProject } from './types';
-import { mockRoadProjects, mockTickets } from './data/mockData';
+import { WardName, Language, ThemeMode, CivicTicket, HazardType, RoadWorkProject, UserRoleMode } from './types';
+import { mockRoadProjects } from './data/mockData';
 import { translations } from './data/translations';
-import { fetchTicketsFromDatabase, fetchProjectsFromDatabase, postComplaintToDatabase, submitVoteToDatabase } from './services/api';
-import { Header } from './components/Header';
-import { WeatherHazardBanner } from './components/WeatherHazardBanner';
+import { 
+  fetchTicketsFromDatabase, 
+  postComplaintToDatabase, 
+  submitVoteToDatabase, 
+  submitPlusOneToDatabase, 
+  submitCommentToDatabase, 
+  resolveTicketInDatabase,
+  UserAccount 
+} from './services/api';
+import { Header, AppViewMode } from './components/Header';
+import { BottomMobileNav } from './components/BottomMobileNav';
 import { KpiBanner } from './components/KpiBanner';
 import { GisMap } from './components/GisMap';
 import { ChatbotWidget } from './components/ChatbotWidget';
 import { ComplaintFormModal } from './components/ComplaintFormModal';
 import { CivicSafetyRules } from './components/CivicSafetyRules';
 import { VerificationTracker } from './components/VerificationTracker';
-import { Building2, Radio, Database } from 'lucide-react';
+import { AdminDashboard } from './components/AdminDashboard';
+import { SocialMediaFeed } from './components/SocialMediaFeed';
+import { CommunitySelfResolution } from './components/CommunitySelfResolution';
+import { AuthModal } from './components/AuthModal';
+import { Building2, Radio } from 'lucide-react';
 
 export function App() {
   const [selectedWard, setSelectedWard] = useState<WardName>('All Wards');
   const [language, setLanguage] = useState<Language>('en');
   const [theme, setTheme] = useState<ThemeMode>('dark');
   
-  const [tickets, setTickets] = useState<CivicTicket[]>(mockTickets);
+  // Auth & User State
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+  const [userRole, setUserRole] = useState<UserRoleMode>('CITIZEN');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  
+  const [activeView, setActiveView] = useState<AppViewMode>('SOCIAL_FEED');
+  const [tickets, setTickets] = useState<CivicTicket[]>([]);
   const [roadProjects, setRoadProjects] = useState<RoadWorkProject[]>(mockRoadProjects);
-  const [dbStatus, setDbStatus] = useState<'CONNECTED' | 'HYBRID_MOCK'>('HYBRID_MOCK');
 
-  const [isLiveStreaming, setIsLiveStreaming] = useState<boolean>(true);
   const [liveToastNotification, setLiveToastNotification] = useState<string | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -35,21 +51,14 @@ export function App() {
 
   const t = translations[language];
 
-  // Fetch initial real-time data from PostgreSQL API on mount
+  // Fetch initial tickets from persistent backend database on mount
   useEffect(() => {
     async function loadDatabaseData() {
       const dbTickets = await fetchTicketsFromDatabase();
       if (dbTickets && dbTickets.length > 0) {
         setTickets(dbTickets);
-        setDbStatus('CONNECTED');
-      }
-
-      const dbProjects = await fetchProjectsFromDatabase();
-      if (dbProjects && dbProjects.length > 0) {
-        setRoadProjects(dbProjects);
       }
     }
-
     loadDatabaseData();
   }, []);
 
@@ -61,80 +70,25 @@ export function App() {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // Helper to generate a live simulated ticket
-  const generateSimulatedTicket = (): CivicTicket => {
-    const locations = [
-      { ward: 'Panchavati' as WardName, loc: 'Near K.K. Wagh Engineering Gate', coords: [20.0180, 73.8180] as [number, number] },
-      { ward: 'Nashik West' as WardName, loc: 'College Road, Opp Bhonsala Gate 2', coords: [20.0050, 73.7620] as [number, number] },
-      { ward: 'Cidco' as WardName, loc: 'Trimurti Chowk Bus Stand Avenue', coords: [19.9690, 73.7620] as [number, number] },
-      { ward: 'Satpur' as WardName, loc: 'ABB Circle Industrial Highway', coords: [19.9980, 73.7380] as [number, number] },
-      { ward: 'Nashik East' as WardName, loc: 'Dwarka Circle Flyover Junction', coords: [19.9970, 73.7780] as [number, number] },
-      { ward: 'Nashik Road' as WardName, loc: 'Bitco Chowk Station Approach', coords: [19.9650, 73.8180] as [number, number] }
-    ];
-
-    const hazards: { type: HazardType; title: string; titleMr: string }[] = [
-      { type: 'POTHOLE', title: 'Deep Pothole Cave-In', titleMr: 'रस्त्यावर मोठा खड्डा' },
-      { type: 'ELECTRICAL_HAZARD', title: 'Sparking Wire Hazard', titleMr: 'विजेची तार धोका' },
-      { type: 'WATER_LEAKAGE', title: 'Pipeline Burst Submersion', titleMr: 'पाणी पाईपलाईन गळती' },
-      { type: 'STREETLIGHT_DEFECT', title: 'Dark Zone Streetlight Defect', titleMr: 'पथदिवा बंद धोका' }
-    ];
-
-    const locObj = locations[Math.floor(Math.random() * locations.length)];
-    const hazObj = hazards[Math.floor(Math.random() * hazards.length)];
-    const ticketId = `t-live-${Date.now()}`;
-    const ticketNum = `NMC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-
-    return {
-      id: ticketId,
-      ticketNumber: ticketNum,
-      title: hazObj.title,
-      titleMr: hazObj.titleMr,
-      hazardType: hazObj.type,
-      ward: locObj.ward,
-      location: locObj.loc,
-      coordinates: [
-        locObj.coords[0] + (Math.random() - 0.5) * 0.006,
-        locObj.coords[1] + (Math.random() - 0.5) * 0.006,
-      ],
-      status: 'VERIFICATION_PENDING',
-      submittedDate: 'Just Now (Live)',
-      assignedEngineer: `Er. M. S. Patil (Ward Eng - ${locObj.ward})`,
-      contractorAgency: 'NMC Smart Rapid Cell',
-      dlpExpiryDate: '36 Months Active DLP',
-      beforePhoto: 'https://images.unsplash.com/photo-1544725121-be3bf52e2dc8?w=600&auto=format&fit=crop&q=80',
-      afterPhoto: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&auto=format&fit=crop&q=80',
-      aiConfidence: 96,
-      citizenVotesConfirmed: 1,
-      citizenVotesReopened: 0,
-      userVerificationState: 'none'
-    };
+  const handleLoginSuccess = (user: UserAccount) => {
+    setCurrentUser(user);
+    setUserRole(user.role);
+    if (user.role === 'ADMIN') {
+      setActiveView('ADMIN_DASHBOARD');
+      setLiveToastNotification(`🛡️ Authenticated as Municipal Admin: ${user.name}`);
+    } else {
+      setActiveView('SOCIAL_FEED');
+      setLiveToastNotification(`👤 Signed in as Citizen: ${user.name}`);
+    }
+    setTimeout(() => setLiveToastNotification(null), 4000);
   };
 
-  // Live simulation streamer (every 22s)
-  useEffect(() => {
-    if (!isLiveStreaming) return;
-
-    const interval = setInterval(() => {
-      const newTicket = generateSimulatedTicket();
-      setTickets((prev) => [newTicket, ...prev]);
-
-      // Post to PostgreSQL API asynchronously
-      postComplaintToDatabase(newTicket);
-
-      setLiveToastNotification(`⚡ LIVE INCIDENT: ${newTicket.ticketNumber} reported in ${newTicket.ward}`);
-      setTimeout(() => setLiveToastNotification(null), 4000);
-    }, 22000);
-
-    return () => clearInterval(interval);
-  }, [isLiveStreaming]);
-
-  const handleManualSimulatedReport = () => {
-    const newTicket = generateSimulatedTicket();
-    setTickets((prev) => [newTicket, ...prev]);
-    postComplaintToDatabase(newTicket);
-
-    setLiveToastNotification(`⚡ DEMO SIMULATION: ${newTicket.ticketNumber} pushed to PostgreSQL & GIS Map!`);
-    setTimeout(() => setLiveToastNotification(null), 4000);
+  const handleSignOut = () => {
+    setCurrentUser(null);
+    setUserRole('CITIZEN');
+    setActiveView('SOCIAL_FEED');
+    setLiveToastNotification(`Signed out successfully.`);
+    setTimeout(() => setLiveToastNotification(null), 3000);
   };
 
   const handleOpenAutoFilledComplaint = (data: {
@@ -152,14 +106,75 @@ export function App() {
     setIsModalOpen(true);
   };
 
-  const handleAddTicket = (newTicket: CivicTicket) => {
-    setTickets((prev) => [newTicket, ...prev]);
-    postComplaintToDatabase(newTicket);
+  // Create complaint & save to backend database
+  const handleAddTicket = async (newTicket: CivicTicket) => {
+    const ticketWithUser: CivicTicket = {
+      ...newTicket,
+      reporterName: currentUser ? currentUser.name : 'Anonymous Citizen',
+      reporterMobile: currentUser ? currentUser.mobile : '',
+    };
 
-    setLiveToastNotification(`✓ COMPLAINT SUBMITTED: Ticket ${newTicket.ticketNumber} saved to PostgreSQL database.`);
+    setTickets((prev) => [ticketWithUser, ...prev]);
+
+    // Save to backend REST API
+    await postComplaintToDatabase(ticketWithUser);
+
+    setLiveToastNotification(`✓ COMPLAINT REGISTERED & SAVED TO BACKEND DB: Ticket ${ticketWithUser.ticketNumber}`);
     setTimeout(() => setLiveToastNotification(null), 4000);
   };
 
+  // +1 Upvote & save to backend database
+  const handlePlusOneVote = async (ticketId: string) => {
+    const userName = currentUser ? currentUser.name : 'Citizen';
+
+    setTickets((prev) =>
+      prev.map((tk) => {
+        if (tk.id === ticketId) {
+          const updatedPlusOne = (tk.plusOneCount || 0) + 1;
+          const updatedImpact = (tk.impactScore || 0) + 5;
+          let newRisk = tk.riskLevel;
+          if (updatedImpact > 100) newRisk = 'CRITICAL';
+          else if (updatedImpact > 40) newRisk = 'HIGH';
+
+          return {
+            ...tk,
+            plusOneCount: updatedPlusOne,
+            impactScore: updatedImpact,
+            riskLevel: newRisk,
+          };
+        }
+        return tk;
+      })
+    );
+
+    await submitPlusOneToDatabase(ticketId, userName);
+  };
+
+  // Add Comment & save to backend database
+  const handleAddComment = async (ticketId: string, commentText: string) => {
+    const userName = currentUser ? currentUser.name : 'Citizen';
+
+    setTickets((prev) =>
+      prev.map((tk) => {
+        if (tk.id === ticketId) {
+          const newComments = tk.comments ? [...tk.comments] : [];
+          newComments.push({
+            id: `c-${Date.now()}`,
+            userName: userName,
+            userRole: userRole,
+            text: commentText,
+            timestamp: 'Just now'
+          });
+          return { ...tk, comments: newComments };
+        }
+        return tk;
+      })
+    );
+
+    await submitCommentToDatabase(ticketId, userName, userRole, commentText);
+  };
+
+  // Citizen audit vote
   const handleUpdateTicketVote = (ticketId: string, action: 'confirm' | 'reopen') => {
     setTickets((prev) =>
       prev.map((ticket) => {
@@ -170,6 +185,7 @@ export function App() {
               citizenVotesConfirmed: ticket.citizenVotesConfirmed + 1,
               userVerificationState: 'confirmed',
               status: 'CLOSED_VERIFIED',
+              autoVanishDaysLeft: 15,
             };
           } else {
             return {
@@ -184,17 +200,38 @@ export function App() {
       })
     );
 
-    // Sync vote to PostgreSQL
     submitVoteToDatabase(ticketId, action);
+  };
+
+  // Admin resolve ticket & save proof to backend database
+  const handleAdminResolveTicket = async (ticketId: string, proofPhotoUrl: string, notes?: string) => {
+    setTickets((prev) =>
+      prev.map((tk) => {
+        if (tk.id === ticketId) {
+          return {
+            ...tk,
+            status: 'EVIDENCE_UPLOADED',
+            afterPhoto: proofPhotoUrl,
+            autoVanishDaysLeft: 15,
+          };
+        }
+        return tk;
+      })
+    );
+
+    await resolveTicketInDatabase(ticketId, proofPhotoUrl, notes);
+
+    setLiveToastNotification(`📸 ADMIN PROOF SAVED TO BACKEND DB: Ticket ${ticketId} resolved.`);
+    setTimeout(() => setLiveToastNotification(null), 4000);
   };
 
   const isDark = theme === 'dark';
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-300 selection:bg-emerald-500 selection:text-white ${
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-300 selection:bg-emerald-500 selection:text-white pb-16 md:pb-0 ${
       isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
     }`}>
-      {/* 1. Header & Navigation Bar */}
+      {/* 1. Clean Header & Navigation Bar */}
       <Header
         selectedWard={selectedWard}
         onSelectWard={setSelectedWard}
@@ -203,30 +240,13 @@ export function App() {
         theme={theme}
         onToggleTheme={toggleTheme}
         onOpenReportModal={handleOpenGeneralReportModal}
+        activeView={activeView}
+        onChangeView={setActiveView}
+        userRole={userRole}
+        currentUser={currentUser}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onSignOut={handleSignOut}
       />
-
-      {/* Live Streamer & Weather Hazard Alert Bar */}
-      <WeatherHazardBanner
-        language={language}
-        theme={theme}
-        isLiveStreaming={isLiveStreaming}
-        onToggleStreaming={() => setIsLiveStreaming((prev) => !prev)}
-        onTriggerManualSimulatedReport={handleManualSimulatedReport}
-      />
-
-      {/* Database Connection Status Bar */}
-      <div className={`px-4 py-1 border-b text-[11px] font-semibold flex items-center justify-between ${
-        isDark ? 'bg-slate-900/60 border-slate-800 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-600'
-      }`}>
-        <div className="flex items-center gap-2 max-w-7xl mx-auto w-full">
-          <Database className="w-3.5 h-3.5 text-emerald-500" />
-          <span>Database Target: <strong className="text-emerald-500 font-mono">PostgreSQL / Supabase (PostGIS enabled)</strong></span>
-          <span className="opacity-40">•</span>
-          <span className="text-emerald-600 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-            {dbStatus === 'CONNECTED' ? '✅ PostgreSQL Live Connected' : '⚡ Real-time Socket API Ready (Port 5000)'}
-          </span>
-        </div>
-      </div>
 
       {/* Live Toast Notification Banner */}
       {liveToastNotification && (
@@ -237,46 +257,76 @@ export function App() {
       )}
 
       <main className="flex-1 space-y-0">
-        {/* 2. Real-Time KPI Metrics Banner */}
-        <KpiBanner
-          language={language}
-          selectedWard={selectedWard}
-          theme={theme}
-        />
+        {/* Dynamic View Rendering Based on Navigation Tab & Role */}
+        {activeView === 'SOCIAL_FEED' && (
+          <SocialMediaFeed
+            tickets={tickets}
+            language={language}
+            theme={theme}
+            selectedWard={selectedWard}
+            onOpenReportModal={handleOpenGeneralReportModal}
+            onPlusOneVote={handlePlusOneVote}
+            onAddComment={handleAddComment}
+          />
+        )}
 
-        {/* 3. Interactive GIS Map Layer */}
-        <GisMap
-          projects={roadProjects}
-          selectedWard={selectedWard}
-          onSelectWard={setSelectedWard}
-          language={language}
-          theme={theme}
-        />
+        {activeView === 'GIS_MAP' && (
+          <>
+            <KpiBanner
+              language={language}
+              selectedWard={selectedWard}
+              theme={theme}
+            />
 
-        {/* 4. Transparency & "Closed != Resolved" Verification Tracker */}
-        <VerificationTracker
-          tickets={tickets}
-          language={language}
-          selectedWard={selectedWard}
-          theme={theme}
-          onUpdateTicketVote={handleUpdateTicketVote}
-        />
+            <GisMap
+              projects={roadProjects}
+              selectedWard={selectedWard}
+              onSelectWard={setSelectedWard}
+              language={language}
+              theme={theme}
+            />
 
-        {/* 5. Civic Sense & Safety Rules Section */}
+            <VerificationTracker
+              tickets={tickets}
+              language={language}
+              selectedWard={selectedWard}
+              theme={theme}
+              onUpdateTicketVote={handleUpdateTicketVote}
+            />
+          </>
+        )}
+
+        {activeView === 'ADMIN_DASHBOARD' && userRole === 'ADMIN' && (
+          <AdminDashboard
+            tickets={tickets}
+            language={language}
+            theme={theme}
+            selectedWard={selectedWard}
+            onSelectWard={setSelectedWard}
+            onAdminResolveTicket={handleAdminResolveTicket}
+          />
+        )}
+
+        {activeView === 'COMMUNITY_RESOLVE' && (
+          <CommunitySelfResolution
+            language={language}
+            theme={theme}
+            selectedWard={selectedWard}
+          />
+        )}
+
         <CivicSafetyRules
           language={language}
           theme={theme}
         />
       </main>
 
-      {/* 6. Smart Complaint AI Chatbot Widget */}
       <ChatbotWidget
         language={language}
         theme={theme}
         onOpenAutoFilledComplaint={handleOpenAutoFilledComplaint}
       />
 
-      {/* Auto-Filled Complaint Modal */}
       <ComplaintFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -286,8 +336,25 @@ export function App() {
         onSubmitSuccess={handleAddTicket}
       />
 
-      {/* Municipal Footer */}
-      <footer className={`${isDark ? 'bg-slate-950 border-slate-800 text-slate-400' : 'bg-slate-900 border-slate-800 text-slate-300'} border-t text-xs py-8 px-4 transition-colors duration-300`}>
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
+        isDark={isDark}
+      />
+
+      <BottomMobileNav
+        activeView={activeView}
+        onChangeView={setActiveView}
+        onOpenReportModal={handleOpenGeneralReportModal}
+        theme={theme}
+        language={language}
+        userRole={userRole}
+        currentUser={currentUser}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+      />
+
+      <footer className={`${isDark ? 'bg-slate-950 border-slate-800 text-slate-400' : 'bg-slate-900 border-slate-800 text-slate-300'} border-t text-xs py-8 px-4 transition-colors duration-300 mb-12 md:mb-0`}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
@@ -310,7 +377,7 @@ export function App() {
             <span>Nashik Road</span>
           </div>
 
-          <div className="text-slate-400 text-[11px] flex items-center gap-1">
+          <div className="text-slate-400 text-[11px]">
             <span>Built for NMC Accountability & Citizen Empowerment</span>
           </div>
         </div>

@@ -28,7 +28,27 @@ export type HazardType =
   | 'UNAUTHORIZED_EXCAVATION'
   | 'WATER_LEAKAGE'
   | 'STREETLIGHT_DEFECT'
-  | 'DRAINAGE_OVERFLOW';
+  | 'DRAINAGE_OVERFLOW'
+  | 'OTHER';
+
+export type DepartmentType = 
+  | 'PWD_ROADS'
+  | 'WATER_SUPPLY'
+  | 'MSEDCL_ELECTRICAL'
+  | 'DRAINAGE_SEWERAGE'
+  | 'STREETLIGHT_SAFETY'
+  | 'SANITATION_OTHER';
+
+export type RiskLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+
+export interface TicketComment {
+  id: string;
+  author?: string;
+  userName?: string;
+  userRole?: 'CITIZEN' | 'ADMIN';
+  text: string;
+  timestamp: string;
+}
 
 export interface RoadWorkProject {
   id: string;
@@ -61,14 +81,25 @@ export interface CivicTicket {
   submittedDate: string;
   assignedEngineer: string;
   contractorAgency: string;
+  department: DepartmentType;
   dlpExpiryDate: string;
   beforePhoto: string;
   afterPhoto?: string;
+  videoUrl?: string;
   aiConfidence?: number;
+  plusOneCount: number;
+  impactScore: number;
+  riskLevel: RiskLevel;
+  resolvedDaysAgo?: number;
+  autoVanishDaysLeft?: number;
+  comments?: TicketComment[];
   citizenVotesConfirmed: number;
   citizenVotesReopened: number;
   userVerificationState?: 'none' | 'confirmed' | 'reopened';
+  reporterName?: string;
+  reporterMobile?: string;
 }
 
 export type Language = 'en' | 'mr';
 export type ThemeMode = 'light' | 'dark';
+export type UserRoleMode = 'CITIZEN' | 'ADMIN';

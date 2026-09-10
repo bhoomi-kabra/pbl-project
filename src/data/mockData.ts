@@ -164,10 +164,20 @@ export const mockTickets: CivicTicket[] = [
     submittedDate: '06 Aug 2026',
     assignedEngineer: 'Er. Rajesh Deshmukh (Ward Eng - Panchavati)',
     contractorAgency: 'M/s Vidyut Urban Infra',
+    department: 'MSEDCL_ELECTRICAL',
     dlpExpiryDate: '15 Nov 2027',
     beforePhoto: 'https://images.unsplash.com/photo-1544725121-be3bf52e2dc8?w=600&auto=format&fit=crop&q=80',
     afterPhoto: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&auto=format&fit=crop&q=80',
     aiConfidence: 98,
+    plusOneCount: 24,
+    impactScore: 92,
+    riskLevel: 'CRITICAL',
+    resolvedDaysAgo: 2,
+    autoVanishDaysLeft: 13,
+    comments: [
+      { id: 'c1', author: 'Saurabh (Local Resident)', text: 'I am also facing the same problem every night when commuting back from college!', timestamp: '2 hours ago' },
+      { id: 'c2', author: 'Ankita Verma', text: 'Live spark witnessed yesterday night during rain. Tagging MSEDCL power dept.', timestamp: '5 hours ago' }
+    ],
     citizenVotesConfirmed: 14,
     citizenVotesReopened: 2,
     userVerificationState: 'none'
@@ -185,10 +195,20 @@ export const mockTickets: CivicTicket[] = [
     submittedDate: '04 Aug 2026',
     assignedEngineer: 'Er. Sunita Patil (Ward Eng - West)',
     contractorAgency: 'L&T Infrastructure',
+    department: 'PWD_ROADS',
     dlpExpiryDate: '20 Oct 2027',
     beforePhoto: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600&auto=format&fit=crop&q=80',
     afterPhoto: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=600&auto=format&fit=crop&q=80',
     aiConfidence: 95,
+    plusOneCount: 42,
+    impactScore: 98,
+    riskLevel: 'CRITICAL',
+    resolvedDaysAgo: 5,
+    autoVanishDaysLeft: 10,
+    comments: [
+      { id: 'c3', author: 'Rahul More (Rider)', text: 'Two bikers skidded here yesterday. Very dangerous curve!', timestamp: '1 day ago' },
+      { id: 'c4', author: 'Nashik Citizen Forum', text: '+1 Upvoted! PWD must asphalt this before weekend rush.', timestamp: '1 day ago' }
+    ],
     citizenVotesConfirmed: 28,
     citizenVotesReopened: 1,
     userVerificationState: 'none'
@@ -206,12 +226,22 @@ export const mockTickets: CivicTicket[] = [
     submittedDate: '07 Aug 2026',
     assignedEngineer: 'Er. Amit Shinde (Ward Eng - Cidco)',
     contractorAgency: 'Maharashtra Water Works',
+    department: 'WATER_SUPPLY',
     dlpExpiryDate: '01 Aug 2028',
     beforePhoto: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&auto=format&fit=crop&q=80',
     afterPhoto: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=600&auto=format&fit=crop&q=80',
     aiConfidence: 92,
+    plusOneCount: 15,
+    impactScore: 65,
+    riskLevel: 'HIGH',
+    resolvedDaysAgo: 1,
+    autoVanishDaysLeft: 14,
+    comments: [
+      { id: 'c5', author: 'Mahesh Kulkarni', text: 'Clean drinking water is wasting on main road. Water Board please shut main valve.', timestamp: '3 hours ago' }
+    ],
     citizenVotesConfirmed: 9,
     citizenVotesReopened: 0,
     userVerificationState: 'none'
   }
 ];
+

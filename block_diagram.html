@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nashik Roads & Civic Monitor - Block Diagram</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #0b0f19;
+      color: #f8fafc;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 26px;
+      color: #38bdf8;
+      margin-bottom: 6px;
+    }
+    .header p {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+    .btn-group {
+      margin-bottom: 15px;
+      display: flex;
+      gap: 12px;
+    }
+    .btn {
+      background: #1e293b;
+      color: #38bdf8;
+      border: 1px solid #38bdf8;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+    .diagram-container {
+      width: 100%;
+      max-width: 1400px;
+      background: #0d1117;
+      border-radius: 12px;
+      border: 1px solid #1e293b;
+      padding: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    @media print {
+      body {
+        background: white;
+        color: black;
+        padding: 0;
+      }
+      .btn-group, .header p {
+        display: none;
+      }
+      .diagram-container {
+        border: none;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🏛️ Nashik Roads & Civic Monitor — Architectural Block Diagram</h1>
+    <p>End-to-End System Pipeline: Citizen Input → AI Classifier → Socket.io Real-Time Stream → Supabase PostGIS → 6 Wards → "Closed != Resolved" Audit</p>
+  </div>
+
+  <div class="btn-group">
+    <button class="btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    <button class="btn" onclick="downloadSVG()">📥 Download SVG File</button>
+  </div>
+
+  <div class="diagram-container" id="svg-wrapper">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1350 950" width="100%" height="100%" style="background-color: #0d1117; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+
+    <linearGradient id="greenBar" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <linearGradient id="blueBar" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+
+    <linearGradient id="orangeBar" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#ea580c" />
+    </linearGradient>
+
+    <linearGradient id="purpleBar" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#6d28d9" />
+    </linearGradient>
+
+    <!-- Arrow Markers -->
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a855f7" />
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f97316" />
+    </marker>
+    
+    <!-- Box Shadows -->
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1350" height="950" fill="#0b0f19" />
+
+  <!-- Grid Pattern Overlay -->
+  <g opacity="0.05" stroke="#ffffff" stroke-width="1">
+    <path d="M 0,50 M 0,100 L 1350,100 M 0,200 L 1350,200 M 0,300 L 1350,300 M 0,400 L 1350,400 M 0,500 L 1350,500 M 0,600 L 1350,600 M 0,700 L 1350,700 M 0,800 L 1350,800 M 0,900 L 1350,900" />
+    <path d="M 100,0 L 100,950 M 200,0 L 200,950 M 300,0 L 300,950 M 400,0 L 400,950 M 500,0 L 500,950 M 600,0 L 600,950 M 700,0 L 700,950 M 800,0 L 800,950 M 900,0 L 900,950 M 1000,0 L 1000,950 M 1100,0 L 1100,950 M 1200,0 L 1200,950" />
+  </g>
+
+  <!-- ================= TOP MAIN TITLE ================= -->
+  <text x="70" y="45" fill="#f8fafc" font-size="28" font-weight="800" letter-spacing="0.5">Block Diagram</text>
+  <text x="630" y="38" fill="#38bdf8" font-size="24" font-weight="700" text-anchor="middle">Nashik Roads &amp; Civic Monitor</text>
+  <text x="630" y="60" fill="#94a3b8" font-size="13" font-weight="500" text-anchor="middle">Intelligent Municipal Accountability &amp; GIS Grievance Platform</text>
+
+  <!-- LEFT SIDEBAR CATEGORY BADGES -->
+  <!-- Web & User Layer -->
+  <rect x="25" y="90" width="35" height="190" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5" />
+  <text x="42" y="185" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle" transform="rotate(-90 42 185)" letter-spacing="1">USER &amp; CLIENT LAYER</text>
+
+  <!-- Core Backend Engine -->
+  <rect x="25" y="295" width="35" height="235" rx="6" fill="#1e293b" stroke="#f97316" stroke-width="1.5" />
+  <text x="42" y="412" fill="#fb923c" font-size="12" font-weight="700" text-anchor="middle" transform="rotate(-90 42 412)" letter-spacing="1">NASHIK CORE ENGINE (NCE)</text>
+
+  <!-- Field & Audit Layer -->
+  <rect x="25" y="545" width="35" height="360" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1.5" />
+  <text x="42" y="725" fill="#34d399" font-size="12" font-weight="700" text-anchor="middle" transform="rotate(-90 42 725)" letter-spacing="1">FIELD EXECUTION &amp; AUDIT CLUSTER</text>
+
+
+  <!-- ================= 1. USER & ACTORS CONTAINER ================= -->
+  <rect x="360" y="85" width="540" height="55" rx="8" fill="#151e32" stroke="#10b981" stroke-width="1.5" filter="url(#glow)"/>
+  <!-- User Icon -->
+  <circle cx="390" cy="112" r="14" fill="#059669" />
+  <path d="M 390 104 A 5 5 0 1 0 390 114 A 5 5 0 1 0 390 104 M 380 122 C 380 117 384 115 390 115 C 396 115 400 117 400 122" fill="#ffffff" />
+  <text x="415" y="110" fill="#ecfdf5" font-size="15" font-weight="700">Citizens / Ward Engineers / NMC Administrator</text>
+  <text x="415" y="128" fill="#a7f3d0" font-size="11">Submit Hazards, Track Defect Liability, Audit Repairs &amp; Monitor SLA</text>
+
+
+  <!-- Arrow: User -> Dashboard -->
+  <line x1="630" y1="140" x2="630" y2="158" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-green)" />
+
+
+  <!-- ================= 2. MASTER DASHBOARD (WEB FRONTEND) ================= -->
+  <rect x="75" y="160" width="1010" height="120" rx="10" fill="#0f172a" stroke="#3b82f6" stroke-width="1.5" filter="url(#glow)"/>
+  
+  <!-- Header Bar -->
+  <path d="M 76 161 L 1084 161 A 9 9 0 0 1 1094 170 L 1094 188 L 76 188 Z" fill="#1e3a8a" />
+  <text x="580" y="180" fill="#bfdbfe" font-size="13" font-weight="700" text-anchor="middle">Master Dashboard (React 18 + Vite 5 + Tailwind CSS)</text>
+
+  <!-- Module 1: GIS Map -->
+  <rect x="90" y="198" width="180" height="70" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="180" y="222" fill="#38bdf8" font-size="13" font-weight="700" text-anchor="middle">🗺️ GIS Infrastructure Map</text>
+  <text x="180" y="240" fill="#94a3b8" font-size="10" text-anchor="middle">Leaflet.js + CartoDB</text>
+  <text x="180" y="254" fill="#64748b" font-size="9" text-anchor="middle">6 Ward Boundaries &amp; Pins</text>
+
+  <!-- Module 2: Smart AI Chatbot -->
+  <rect x="290" y="198" width="180" height="70" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="380" y="222" fill="#38bdf8" font-size="13" font-weight="700" text-anchor="middle">🤖 AI Complaint Chatbot</text>
+  <text x="380" y="240" fill="#94a3b8" font-size="10" text-anchor="middle">Conversational NLP Engine</text>
+  <text x="380" y="254" fill="#64748b" font-size="9" text-anchor="middle">Deep-Links to Intake Form</text>
+
+  <!-- Module 3: Verification Tracker -->
+  <rect x="490" y="198" width="180" height="70" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="580" y="222" fill="#38bdf8" font-size="13" font-weight="700" text-anchor="middle">🔍 Verification Audit Portal</text>
+  <text x="580" y="240" fill="#94a3b8" font-size="10" text-anchor="middle">"Closed != Resolved" Engine</text>
+  <text x="580" y="254" fill="#64748b" font-size="9" text-anchor="middle">Before vs After Photo Audit</text>
+
+  <!-- Module 4: Contractor DLP Monitor -->
+  <rect x="690" y="198" width="180" height="70" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="780" y="222" fill="#38bdf8" font-size="13" font-weight="700" text-anchor="middle">📋 Contractor DLP Tracker</text>
+  <text x="780" y="240" fill="#94a3b8" font-size="10" text-anchor="middle">Defect Liability Expiry</text>
+  <text x="780" y="254" fill="#64748b" font-size="9" text-anchor="middle">36-Month Warranty Audit</text>
+
+  <!-- Module 5: i18n & Helplines -->
+  <rect x="890" y="198" width="180" height="70" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="980" y="222" fill="#38bdf8" font-size="13" font-weight="700" text-anchor="middle">🌐 Bilingual &amp; Safety Rules</text>
+  <text x="980" y="240" fill="#94a3b8" font-size="10" text-anchor="middle">English / मराठी Engine</text>
+  <text x="980" y="254" fill="#64748b" font-size="9" text-anchor="middle">24x7 Emergency Helplines</text>
+
+
+  <!-- Vertical Connection Line: Dashboard <-> Intelligence Engine -->
+  <line x1="630" y1="280" x2="630" y2="305" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrow-blue)" />
+
+
+  <!-- ================= 3. CORE INTELLIGENCE ENGINE (CIE / NCE) ================= -->
+  <rect x="75" y="305" width="1010" height="215" rx="10" fill="#0f172a" stroke="#f97316" stroke-width="1.5" filter="url(#glow)"/>
+
+  <!-- Header Bar -->
+  <path d="M 76 306 L 1084 306 A 9 9 0 0 1 1094 315 L 1094 333 L 76 333 Z" fill="#7c2d12" />
+  <text x="580" y="325" fill="#ffedd5" font-size="13" font-weight="700" text-anchor="middle">🧠 Nashik Core Intelligence Engine (NCE) &amp; Express API Gateway</text>
+
+  <!-- Pipeline Box 1: AI Classifier -->
+  <g transform="translate(90, 350)">
+    <rect width="125" height="145" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="62" y="22" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">🤖 AI Intent</text>
+    <text x="62" y="38" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">Classifier</text>
+    <line x1="15" y1="48" x2="110" y2="48" stroke="#334155" stroke-width="1" />
+    <text x="62" y="66" fill="#cbd5e1" font-size="10" text-anchor="middle">Intent Extraction</text>
+    <text x="62" y="82" fill="#94a3b8" font-size="9" text-anchor="middle">ELECTRICAL /</text>
+    <text x="62" y="94" fill="#94a3b8" font-size="9" text-anchor="middle">ROAD_HAZARD</text>
+    <text x="62" y="112" fill="#22c55e" font-size="9" font-weight="600" text-anchor="middle">Conf &gt; 95%</text>
+  </g>
+  <!-- Pipeline Arrow 1->2 -->
+  <line x1="215" y1="422" x2="228" y2="422" stroke="#f97316" stroke-width="2" marker-end="url(#arrow-orange)" />
+
+  <!-- Pipeline Box 2: Ward Geofencer -->
+  <g transform="translate(230, 350)">
+    <rect width="125" height="145" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="62" y="22" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">📍 GIS Ward</text>
+    <text x="62" y="38" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">Resolver</text>
+    <line x1="15" y1="48" x2="110" y2="48" stroke="#334155" stroke-width="1" />
+    <text x="62" y="66" fill="#cbd5e1" font-size="10" text-anchor="middle">PostGIS GeoJSON</text>
+    <text x="62" y="82" fill="#94a3b8" font-size="9" text-anchor="middle">Boundaries for</text>
+    <text x="62" y="94" fill="#94a3b8" font-size="9" text-anchor="middle">6 Nashik Wards</text>
+    <text x="62" y="112" fill="#38bdf8" font-size="9" font-weight="600" text-anchor="middle">Auto Ward Binding</text>
+  </g>
+  <!-- Pipeline Arrow 2->3 -->
+  <line x1="355" y1="422" x2="368" y2="422" stroke="#f97316" stroke-width="2" marker-end="url(#arrow-orange)" />
+
+  <!-- Pipeline Box 3: Express REST API -->
+  <g transform="translate(370, 350)">
+    <rect width="125" height="145" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="62" y="22" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">⚡ REST API</text>
+    <text x="62" y="38" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">Controller</text>
+    <line x1="15" y1="48" x2="110" y2="48" stroke="#334155" stroke-width="1" />
+    <text x="62" y="66" fill="#cbd5e1" font-size="10" text-anchor="middle">Node.js Express</text>
+    <text x="62" y="82" fill="#94a3b8" font-size="9" text-anchor="middle">Intake Endpoints</text>
+    <text x="62" y="94" fill="#94a3b8" font-size="9" text-anchor="middle">POST /complaints</text>
+    <text x="62" y="112" fill="#e2e8f0" font-size="9" font-weight="600" text-anchor="middle">Port 5000 Sync</text>
+  </g>
+  <!-- Pipeline Arrow 3->4 -->
+  <line x1="495" y1="422" x2="508" y2="422" stroke="#f97316" stroke-width="2" marker-end="url(#arrow-orange)" />
+
+  <!-- Pipeline Box 4: Socket.io Engine -->
+  <g transform="translate(510, 350)">
+    <rect width="125" height="145" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="62" y="22" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">📡 WebSocket</text>
+    <text x="62" y="38" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">Streamer</text>
+    <line x1="15" y1="48" x2="110" y2="48" stroke="#334155" stroke-width="1" />
+    <text x="62" y="66" fill="#cbd5e1" font-size="10" text-anchor="middle">Socket.io Engine</text>
+    <text x="62" y="82" fill="#94a3b8" font-size="9" text-anchor="middle">Broadcasts Live</text>
+    <text x="62" y="94" fill="#94a3b8" font-size="9" text-anchor="middle">'new_complaint'</text>
+    <text x="62" y="112" fill="#38bdf8" font-size="9" font-weight="600" text-anchor="middle">Instant Map Pins</text>
+  </g>
+  <!-- Pipeline Arrow 4->5 -->
+  <line x1="635" y1="422" x2="648" y2="422" stroke="#f97316" stroke-width="2" marker-end="url(#arrow-orange)" />
+
+  <!-- Pipeline Box 5: DLP Engine -->
+  <g transform="translate(650, 350)">
+    <rect width="125" height="145" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="62" y="22" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">🛡️ DLP Warranty</text>
+    <text x="62" y="38" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">Engine</text>
+    <line x1="15" y1="48" x2="110" y2="48" stroke="#334155" stroke-width="1" />
+    <text x="62" y="66" fill="#cbd5e1" font-size="10" text-anchor="middle">Contractor Audit</text>
+    <text x="62" y="82" fill="#94a3b8" font-size="9" text-anchor="middle">Checks Active</text>
+    <text x="62" y="94" fill="#94a3b8" font-size="9" text-anchor="middle">Contractor Terms</text>
+    <text x="62" y="112" fill="#f43f5e" font-size="9" font-weight="600" text-anchor="middle">Penalty Flagging</text>
+  </g>
+  <!-- Pipeline Arrow 5->6 -->
+  <line x1="775" y1="422" x2="788" y2="422" stroke="#f97316" stroke-width="2" marker-end="url(#arrow-orange)" />
+
+  <!-- Pipeline Box 6: Audit Gate -->
+  <g transform="translate(790, 350)">
+    <rect width="125" height="145" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="62" y="22" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">⚖️ Resolution</text>
+    <text x="62" y="38" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">Audit Gate</text>
+    <line x1="15" y1="48" x2="110" y2="48" stroke="#334155" stroke-width="1" />
+    <text x="62" y="66" fill="#cbd5e1" font-size="10" text-anchor="middle">Citizen Vote</text>
+    <text x="62" y="82" fill="#94a3b8" font-size="9" text-anchor="middle">Evaluates Audit</text>
+    <text x="62" y="94" fill="#22c55e" font-size="9" text-anchor="middle">CLOSED / REOPEN</text>
+    <text x="62" y="112" fill="#a7f3d0" font-size="9" font-weight="600" text-anchor="middle">+50 Civic Score</text>
+  </g>
+  <!-- Pipeline Arrow 6->7 -->
+  <line x1="915" y1="422" x2="928" y2="422" stroke="#f97316" stroke-width="2" marker-end="url(#arrow-orange)" />
+
+  <!-- Pipeline Box 7: SLA Escalator -->
+  <g transform="translate(930, 350)">
+    <rect width="125" height="145" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="62" y="22" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">🚨 SLA Breach</text>
+    <text x="62" y="38" fill="#fdba74" font-size="12" font-weight="700" text-anchor="middle">Escalator</text>
+    <line x1="15" y1="48" x2="110" y2="48" stroke="#334155" stroke-width="1" />
+    <text x="62" y="66" fill="#cbd5e1" font-size="10" text-anchor="middle">Auto Escalation</text>
+    <text x="62" y="82" fill="#94a3b8" font-size="9" text-anchor="middle">Alerts NMC Chief</text>
+    <text x="62" y="94" fill="#94a3b8" font-size="9" text-anchor="middle">Ward Engineer</text>
+    <text x="62" y="112" fill="#f43f5e" font-size="9" font-weight="600" text-anchor="middle">SLA Warning Alert</text>
+  </g>
+
+  <!-- Horizontal Connection Arrow: CIE -> External Services -->
+  <line x1="1085" y1="412" x2="1110" y2="412" stroke="#a855f7" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrow-purple)" />
+  <line x1="1110" y1="412" x2="1085" y2="412" stroke="#a855f7" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrow-purple)" />
+
+
+  <!-- ================= 4. EXTERNAL SERVICES & DATA LAYER (RIGHT SIDEBAR) ================= -->
+  <rect x="1115" y="160" width="210" height="745" rx="10" fill="#0f172a" stroke="#8b5cf6" stroke-width="1.5" filter="url(#glow)"/>
+  
+  <!-- Header Bar -->
+  <path d="M 1116 161 L 1324 161 A 9 9 0 0 1 1334 170 L 1334 188 L 1116 188 Z" fill="#4c1d95" />
+  <text x="1225" y="180" fill="#ddd6fe" font-size="13" font-weight="700" text-anchor="middle">External Services &amp; DB</text>
+
+  <!-- Service 1: Supabase DB -->
+  <g transform="translate(1130, 205)">
+    <rect width="180" height="85" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <text x="90" y="24" fill="#c084fc" font-size="13" font-weight="700" text-anchor="middle">🗄️ Supabase DB</text>
+    <text x="90" y="42" fill="#94a3b8" font-size="10" text-anchor="middle">PostgreSQL Cloud DB</text>
+    <text x="90" y="58" fill="#64748b" font-size="9" text-anchor="middle">Complaints, Contractors</text>
+    <text x="90" y="72" fill="#a7f3d0" font-size="9" text-anchor="middle">SLA &amp; Ward Tables</text>
+  </g>
+
+  <!-- Service 2: PostGIS Extension -->
+  <g transform="translate(1130, 305)">
+    <rect width="180" height="85" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <text x="90" y="24" fill="#c084fc" font-size="13" font-weight="700" text-anchor="middle">🗺️ PostGIS Spatial</text>
+    <text x="90" y="42" fill="#94a3b8" font-size="10" text-anchor="middle">GIS Spatial Extension</text>
+    <text x="90" y="58" fill="#64748b" font-size="9" text-anchor="middle">ST_MakePoint(lng, lat)</text>
+    <text x="90" y="72" fill="#38bdf8" font-size="9" text-anchor="middle">Spatial Queries (EPSG 4326)</text>
+  </g>
+
+  <!-- Service 3: Weather Feed -->
+  <g transform="translate(1130, 405)">
+    <rect width="180" height="85" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <text x="90" y="24" fill="#c084fc" font-size="13" font-weight="700" text-anchor="middle">🌩️ OpenWeather API</text>
+    <text x="90" y="42" fill="#94a3b8" font-size="10" text-anchor="middle">Live Monsoon Feed</text>
+    <text x="90" y="58" fill="#64748b" font-size="9" text-anchor="middle">Precipitation Triggers</text>
+    <text x="90" y="72" fill="#fde047" font-size="9" text-anchor="middle">Pothole Risk Alerts</text>
+  </g>
+
+  <!-- Service 4: JWT Auth -->
+  <g transform="translate(1130, 505)">
+    <rect width="180" height="85" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <text x="90" y="24" fill="#c084fc" font-size="13" font-weight="700" text-anchor="middle">🔒 JWT Auth &amp; RBAC</text>
+    <text x="90" y="42" fill="#94a3b8" font-size="10" text-anchor="middle">Role-Based Security</text>
+    <text x="90" y="58" fill="#64748b" font-size="9" text-anchor="middle">Citizen / Engineer / Admin</text>
+    <text x="90" y="72" fill="#e2e8f0" font-size="9" text-anchor="middle">Secure Tokens</text>
+  </g>
+
+  <!-- Service 5: Evidence Photo Storage -->
+  <g transform="translate(1130, 605)">
+    <rect width="180" height="85" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <text x="90" y="24" fill="#c084fc" font-size="13" font-weight="700" text-anchor="middle">📷 Photo Storage</text>
+    <text x="90" y="42" fill="#94a3b8" font-size="10" text-anchor="middle">Geotagged Evidence</text>
+    <text x="90" y="58" fill="#64748b" font-size="9" text-anchor="middle">EXIF GPS Metadata</text>
+    <text x="90" y="72" fill="#fb923c" font-size="9" text-anchor="middle">Before vs After Proofs</text>
+  </g>
+
+  <!-- Service 6: Event Simulator -->
+  <g transform="translate(1130, 705)">
+    <rect width="180" height="85" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <text x="90" y="24" fill="#c084fc" font-size="13" font-weight="700" text-anchor="middle">🐍 Python Streamer</text>
+    <text x="90" y="42" fill="#94a3b8" font-size="10" text-anchor="middle">`seed_live_data.py`</text>
+    <text x="90" y="58" fill="#64748b" font-size="9" text-anchor="middle">Simulates Live Traffic</text>
+    <text x="90" y="72" fill="#4ade80" font-size="9" text-anchor="middle">Mock Geo-Events</text>
+  </g>
+
+  <!-- Service 7: Legend Box inside Right Column / Bottom -->
+  <g transform="translate(1130, 805)">
+    <rect width="180" height="85" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+    <text x="90" y="20" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="middle">LEGEND</text>
+    
+    <line x1="15" y1="35" x2="45" y2="35" stroke="#f97316" stroke-width="2" marker-end="url(#arrow-orange)" />
+    <text x="52" y="38" fill="#cbd5e1" font-size="9">Control Flow</text>
+
+    <line x1="15" y1="52" x2="45" y2="52" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-green)" />
+    <text x="52" y="55" fill="#cbd5e1" font-size="9">Result / Audit Flow</text>
+
+    <line x1="15" y1="69" x2="45" y2="69" stroke="#a855f7" stroke-width="2" stroke-dasharray="3 3" marker-end="url(#arrow-purple)" />
+    <text x="52" y="72" fill="#cbd5e1" font-size="9">DB / Service Sync</text>
+  </g>
+
+
+  <!-- ================= 5. FIELD EXECUTION & WARD CLUSTER (6 NASHIK WARDS) ================= -->
+  <rect x="75" y="540" width="1010" height="235" rx="10" fill="#0f172a" stroke="#10b981" stroke-width="1.5" filter="url(#glow)"/>
+  
+  <!-- Header Bar -->
+  <path d="M 76 541 L 1084 541 A 9 9 0 0 1 1094 550 L 1094 568 L 76 568 Z" fill="#064e3b" />
+  <text x="580" y="560" fill="#a7f3d0" font-size="13" font-weight="700" text-anchor="middle">🏗️ Field Execution Cluster across 6 Administrative Wards of Nashik</text>
+
+  <!-- Control Line Arrow from CIE down to Wards -->
+  <line x1="630" y1="520" x2="630" y2="540" stroke="#f97316" stroke-width="2" marker-end="url(#arrow-orange)"/>
+  
+  <!-- Ward Box 1: Panchavati -->
+  <g transform="translate(90, 580)">
+    <rect width="150" height="145" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <rect x="10" y="10" width="130" height="24" rx="4" fill="#065f46"/>
+    <text x="75" y="26" fill="#ecfdf5" font-size="11" font-weight="700" text-anchor="middle">Ward 1: Panchavati</text>
+    <text x="75" y="50" fill="#34d399" font-size="10" font-weight="600" text-anchor="middle">Ward Engineer Agent</text>
+    <text x="75" y="68" fill="#94a3b8" font-size="9" text-anchor="middle">Lifecycle Tracker:</text>
+    <text x="75" y="82" fill="#fde047" font-size="9" text-anchor="middle">🔴Trench → 🟡Concrete</text>
+    <text x="75" y="96" fill="#60a5fa" font-size="9" text-anchor="middle">→ 🔵Curing → 🟢Done</text>
+    <line x1="15" y1="106" x2="135" y2="106" stroke="#334155" stroke-width="1" />
+    <text x="75" y="122" fill="#cbd5e1" font-size="9" text-anchor="middle">DLP: L&amp;T Infra (36m)</text>
+    <text x="75" y="136" fill="#a7f3d0" font-size="9" text-anchor="middle">GPS Geotag Upload</text>
+  </g>
+
+  <!-- Ward Box 2: Nashik East -->
+  <g transform="translate(250, 580)">
+    <rect width="150" height="145" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <rect x="10" y="10" width="130" height="24" rx="4" fill="#065f46"/>
+    <text x="75" y="26" fill="#ecfdf5" font-size="11" font-weight="700" text-anchor="middle">Ward 2: Nashik East</text>
+    <text x="75" y="50" fill="#34d399" font-size="10" font-weight="600" text-anchor="middle">Ward Engineer Agent</text>
+    <text x="75" y="68" fill="#94a3b8" font-size="9" text-anchor="middle">Lifecycle Tracker:</text>
+    <text x="75" y="82" fill="#fde047" font-size="9" text-anchor="middle">🔴Trench → 🟡Concrete</text>
+    <text x="75" y="96" fill="#60a5fa" font-size="9" text-anchor="middle">→ 🔵Curing → 🟢Done</text>
+    <line x1="15" y1="106" x2="135" y2="106" stroke="#334155" stroke-width="1" />
+    <text x="75" y="122" fill="#cbd5e1" font-size="9" text-anchor="middle">DLP: Eagle Infra (24m)</text>
+    <text x="75" y="136" fill="#a7f3d0" font-size="9" text-anchor="middle">GPS Geotag Upload</text>
+  </g>
+
+  <!-- Ward Box 3: Nashik West -->
+  <g transform="translate(410, 580)">
+    <rect width="150" height="145" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <rect x="10" y="10" width="130" height="24" rx="4" fill="#065f46"/>
+    <text x="75" y="26" fill="#ecfdf5" font-size="11" font-weight="700" text-anchor="middle">Ward 3: Nashik West</text>
+    <text x="75" y="50" fill="#34d399" font-size="10" font-weight="600" text-anchor="middle">Ward Engineer Agent</text>
+    <text x="75" y="68" fill="#94a3b8" font-size="9" text-anchor="middle">Lifecycle Tracker:</text>
+    <text x="75" y="82" fill="#fde047" font-size="9" text-anchor="middle">🔴Trench → 🟡Concrete</text>
+    <text x="75" y="96" fill="#60a5fa" font-size="9" text-anchor="middle">→ 🔵Curing → 🟢Done</text>
+    <line x1="15" y1="106" x2="135" y2="106" stroke="#334155" stroke-width="1" />
+    <text x="75" y="122" fill="#cbd5e1" font-size="9" text-anchor="middle">DLP: NMC Road Cell (12m)</text>
+    <text x="75" y="136" fill="#a7f3d0" font-size="9" text-anchor="middle">GPS Geotag Upload</text>
+  </g>
+
+  <!-- Ward Box 4: Cidco -->
+  <g transform="translate(570, 580)">
+    <rect width="150" height="145" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <rect x="10" y="10" width="130" height="24" rx="4" fill="#065f46"/>
+    <text x="75" y="26" fill="#ecfdf5" font-size="11" font-weight="700" text-anchor="middle">Ward 4: Cidco</text>
+    <text x="75" y="50" fill="#34d399" font-size="10" font-weight="600" text-anchor="middle">Ward Engineer Agent</text>
+    <text x="75" y="68" fill="#94a3b8" font-size="9" text-anchor="middle">Lifecycle Tracker:</text>
+    <text x="75" y="82" fill="#fde047" font-size="9" text-anchor="middle">🔴Trench → 🟡Concrete</text>
+    <text x="75" y="96" fill="#60a5fa" font-size="9" text-anchor="middle">→ 🔵Curing → 🟢Done</text>
+    <line x1="15" y1="106" x2="135" y2="106" stroke="#334155" stroke-width="1" />
+    <text x="75" y="122" fill="#cbd5e1" font-size="9" text-anchor="middle">DLP: SmartCity Ltd (36m)</text>
+    <text x="75" y="136" fill="#a7f3d0" font-size="9" text-anchor="middle">GPS Geotag Upload</text>
+  </g>
+
+  <!-- Ward Box 5: Satpur -->
+  <g transform="translate(730, 580)">
+    <rect width="150" height="145" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <rect x="10" y="10" width="130" height="24" rx="4" fill="#065f46"/>
+    <text x="75" y="26" fill="#ecfdf5" font-size="11" font-weight="700" text-anchor="middle">Ward 5: Satpur</text>
+    <text x="75" y="50" fill="#34d399" font-size="10" font-weight="600" text-anchor="middle">Ward Engineer Agent</text>
+    <text x="75" y="68" fill="#94a3b8" font-size="9" text-anchor="middle">Lifecycle Tracker:</text>
+    <text x="75" y="82" fill="#fde047" font-size="9" text-anchor="middle">🔴Trench → 🟡Concrete</text>
+    <text x="75" y="96" fill="#60a5fa" font-size="9" text-anchor="middle">→ 🔵Curing → 🟢Done</text>
+    <line x1="15" y1="106" x2="135" y2="106" stroke="#334155" stroke-width="1" />
+    <text x="75" y="122" fill="#cbd5e1" font-size="9" text-anchor="middle">DLP: MIDC Infra (24m)</text>
+    <text x="75" y="136" fill="#a7f3d0" font-size="9" text-anchor="middle">GPS Geotag Upload</text>
+  </g>
+
+  <!-- Ward Box 6: Nashik Road -->
+  <g transform="translate(890, 580)">
+    <rect width="150" height="145" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <rect x="10" y="10" width="130" height="24" rx="4" fill="#065f46"/>
+    <text x="75" y="26" fill="#ecfdf5" font-size="11" font-weight="700" text-anchor="middle">Ward 6: Nashik Road</text>
+    <text x="75" y="50" fill="#34d399" font-size="10" font-weight="600" text-anchor="middle">Ward Engineer Agent</text>
+    <text x="75" y="68" fill="#94a3b8" font-size="9" text-anchor="middle">Lifecycle Tracker:</text>
+    <text x="75" y="82" fill="#fde047" font-size="9" text-anchor="middle">🔴Trench → 🟡Concrete</text>
+    <text x="75" y="96" fill="#60a5fa" font-size="9" text-anchor="middle">→ 🔵Curing → 🟢Done</text>
+    <line x1="15" y1="106" x2="135" y2="106" stroke="#334155" stroke-width="1" />
+    <text x="75" y="122" fill="#cbd5e1" font-size="9" text-anchor="middle">DLP: PWD Nashik (36m)</text>
+    <text x="75" y="136" fill="#a7f3d0" font-size="9" text-anchor="middle">GPS Geotag Upload</text>
+  </g>
+
+  <!-- Result flow arrow from Wards down to Audit -->
+  <line x1="630" y1="775" x2="630" y2="798" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+  <!-- ================= 6. FINAL AUDIT & SLA RESOLUTION ENGINE ================= -->
+  <rect x="75" y="800" width="1010" height="105" rx="10" fill="#0f172a" stroke="#06b6d4" stroke-width="1.5" filter="url(#glow)"/>
+  
+  <!-- Content -->
+  <rect x="90" y="815" width="980" height="75" rx="8" fill="#164e63" stroke="#0891b2" stroke-width="1"/>
+
+  <text x="580" y="840" fill="#cffafe" font-size="16" font-weight="800" text-anchor="middle">⚖️ Final Citizen Verification &amp; Resolution Audit Engine ("Closed != Resolved")</text>
+  
+  <text x="280" y="865" fill="#a7f3d0" font-size="12" font-weight="700" text-anchor="middle">🟢 Option 1: "I Confirm It's Fixed"</text>
+  <text x="280" y="880" fill="#e0f2fe" font-size="10" text-anchor="middle">Ticket → CLOSED_VERIFIED | SLA Completed | +50 Civic Score</text>
+
+  <text x="880" y="865" fill="#fca5a5" font-size="12" font-weight="700" text-anchor="middle">🔴 Option 2: "Not Fixed Properly"</text>
+  <text x="880" y="880" fill="#fee2e2" font-size="10" text-anchor="middle">Ticket → REOPENED_ESCALATED | Escalates to Chief Engineer &amp; Penalty Flag</text>
+
+  <line x1="580" y1="850" x2="580" y2="885" stroke="#0891b2" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+</svg>
+
+  </div>
+
+  <script>
+    function downloadSVG() {
+      const svgElement = document.querySelector('svg').outerHTML;
+      const blob = new Blob([svgElement], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Nashik_Roads_Block_Diagram.svg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
