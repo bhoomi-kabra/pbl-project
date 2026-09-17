@@ -9,6 +9,9 @@ import {
   submitPlusOneToDatabase, 
   submitCommentToDatabase, 
   resolveTicketInDatabase,
+  fetchProjectsFromDatabase,
+  postProjectToDatabase,
+  updateProjectStatusInDatabase,
   UserAccount 
 } from './services/api';
 import { Header, AppViewMode } from './components/Header';
@@ -51,16 +54,40 @@ export function App() {
 
   const t = translations[language];
 
-  // Fetch initial tickets from persistent backend database on mount
+  // Fetch initial tickets & road projects and poll backend DB every 3s for live sync
   useEffect(() => {
     async function loadDatabaseData() {
       const dbTickets = await fetchTicketsFromDatabase();
       if (dbTickets && dbTickets.length > 0) {
         setTickets(dbTickets);
       }
+      const dbProjects = await fetchProjectsFromDatabase();
+      if (dbProjects && dbProjects.length > 0) {
+        setRoadProjects(dbProjects);
+      }
     }
     loadDatabaseData();
+    const interval = setInterval(loadDatabaseData, 3000);
+    return () => clearInterval(interval);
   }, []);
+
+  const handleCreateRoadProject = async (projectData: Partial<RoadWorkProject>) => {
+    const created = await postProjectToDatabase(projectData);
+    if (created) {
+      setRoadProjects((prev) => [created, ...prev]);
+      setLiveToastNotification(`🛣️ NEW ROAD PROJECT CREATED: ${created.tenderId} (${created.roadName})`);
+      setTimeout(() => setLiveToastNotification(null), 4000);
+    }
+  };
+
+  const handleUpdateRoadProjectStatus = async (projectId: string, state: any) => {
+    setRoadProjects((prev) =>
+      prev.map((p) => (p.id === projectId ? { ...p, state } : p))
+    );
+    await updateProjectStatusInDatabase(projectId, state);
+    setLiveToastNotification(`🔄 ROAD PROJECT STATUS TRANSITIONED: ${state}`);
+    setTimeout(() => setLiveToastNotification(null), 4000);
+  };
 
   const toggleLanguage = () => {
     setLanguage((prev) => (prev === 'en' ? 'mr' : 'en'));
@@ -200,7 +227,7 @@ export function App() {
       })
     );
 
-    submitVoteToDatabase(ticketId, action);
+    submitVoteToDatabase(ticketId, action, currentUser?.name, currentUser?.mobile);
   };
 
   // Admin resolve ticket & save proof to backend database
@@ -291,6 +318,7 @@ export function App() {
               language={language}
               selectedWard={selectedWard}
               theme={theme}
+              currentUser={currentUser}
               onUpdateTicketVote={handleUpdateTicketVote}
             />
           </>
@@ -299,11 +327,14 @@ export function App() {
         {activeView === 'ADMIN_DASHBOARD' && userRole === 'ADMIN' && (
           <AdminDashboard
             tickets={tickets}
+            roadProjects={roadProjects}
             language={language}
             theme={theme}
             selectedWard={selectedWard}
             onSelectWard={setSelectedWard}
             onAdminResolveTicket={handleAdminResolveTicket}
+            onCreateProject={handleCreateRoadProject}
+            onUpdateProjectStatus={handleUpdateRoadProjectStatus}
           />
         )}
 

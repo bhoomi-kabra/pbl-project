@@ -105,18 +105,21 @@ export async function resolveTicketInDatabase(ticketId: string, proofPhotoUrl: s
 /**
  * Submit citizen audit vote
  */
-export async function submitVoteToDatabase(ticketId: string, action: 'confirm' | 'reopen'): Promise<any> {
+export async function submitVoteToDatabase(ticketId: string, action: 'confirm' | 'reopen', userName?: string, userMobile?: string): Promise<any> {
   try {
     const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/vote`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action }),
+      body: JSON.stringify({ action, userName, userMobile }),
     });
-    if (!response.ok) throw new Error('Vote submission failed');
+    if (!response.ok) {
+      const errRes = await response.json().catch(() => ({}));
+      throw new Error(errRes.error || 'Vote submission failed');
+    }
     return await response.json();
-  } catch (error) {
-    console.warn('Vote API offline:', error);
-    return null;
+  } catch (error: any) {
+    console.warn('Vote API error:', error.message || error);
+    throw error;
   }
 }
 
@@ -170,6 +173,82 @@ export async function fetchRegisteredUsers(): Promise<UserAccount[]> {
   }
 }
 
-export async function fetchProjectsFromDatabase(): Promise<RoadWorkProject[]> {
-  return [];
+/**
+ * Fetch road projects from backend database (TC-01 & TC-02)
+ */
+export async function fetchProjectsFromDatabase(ward?: string): Promise<RoadWorkProject[]> {
+  try {
+    const url = ward && ward !== 'All Wards' ? `${API_BASE_URL}/projects?ward=${encodeURIComponent(ward)}` : `${API_BASE_URL}/projects`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Fetch projects failed');
+    return await response.json();
+  } catch (error) {
+    console.warn('Fetch projects API offline:', error);
+    return [];
+  }
+}
+
+/**
+ * Create new road project in backend database (TC-03)
+ */
+export async function postProjectToDatabase(projectData: Partial<RoadWorkProject>): Promise<RoadWorkProject | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/projects`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(projectData),
+    });
+    if (!response.ok) throw new Error('Create project API failed');
+    return await response.json();
+  } catch (error) {
+    console.warn('Create project API offline:', error);
+    return null;
+  }
+}
+
+/**
+ * Transition road project status (TC-05)
+ */
+export async function updateProjectStatusInDatabase(projectId: string, state: string): Promise<RoadWorkProject | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state }),
+    });
+    if (!response.ok) throw new Error('Update project status failed');
+    return await response.json();
+  } catch (error) {
+    console.warn('Update project status offline:', error);
+    return null;
+  }
+}
+
+/**
+ * Ticket Tracking Lookup by generated tracking code (TC-08)
+ */
+export async function trackTicketByNumber(ticketNumber: string): Promise<CivicTicket | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/tickets/track/${encodeURIComponent(ticketNumber)}`);
+    if (!response.ok) throw new Error('Tracking lookup failed');
+    return await response.json();
+  } catch (error) {
+    console.warn('Tracking lookup API offline:', error);
+    return null;
+  }
+}
+
+/**
+ * Export ward report as CSV (TC-10)
+ */
+export async function exportWardReportData(ward?: string): Promise<any> {
+  try {
+    const url = `${API_BASE_URL}/reports/export?ward=${encodeURIComponent(ward || 'All Wards')}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Export report failed');
+    return await response.json();
+  } catch (error) {
+    console.warn('Export report API offline:', error);
+    return null;
+  }
 }

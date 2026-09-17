@@ -1,37 +1,52 @@
 import React, { useState, useEffect } from 'react';
-import { CivicTicket, WardName, Language, ThemeMode, DepartmentType } from '../types';
+import { CivicTicket, WardName, Language, ThemeMode, DepartmentType, RoadWorkProject, LifecycleState } from '../types';
 import { translations } from '../data/translations';
-import { LayoutDashboard, BarChart3, AlertCircle, CheckCircle2, Clock, MapPin, ShieldAlert, ArrowUpRight, TrendingUp, Flame, Filter, Camera, ShieldCheck, RefreshCw, Users, UserCheck, Phone, Mail } from 'lucide-react';
-import { fetchRegisteredUsers, UserAccount } from '../services/api';
+import { LayoutDashboard, BarChart3, AlertCircle, CheckCircle2, Clock, MapPin, ShieldAlert, ArrowUpRight, TrendingUp, Flame, Filter, Camera, ShieldCheck, RefreshCw, Users, UserCheck, Phone, Mail, PlusCircle, Download, FileText, HardHat } from 'lucide-react';
+import { fetchRegisteredUsers, UserAccount, exportWardReportData } from '../services/api';
 
 interface AdminDashboardProps {
   tickets: CivicTicket[];
+  roadProjects?: RoadWorkProject[];
   language: Language;
   theme: ThemeMode;
   selectedWard: WardName;
   onSelectWard: (ward: WardName) => void;
   onAdminResolveTicket?: (ticketId: string, proofPhotoUrl: string, notes?: string) => void;
+  onCreateProject?: (projectData: Partial<RoadWorkProject>) => void;
+  onUpdateProjectStatus?: (projectId: string, state: LifecycleState) => void;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   tickets,
+  roadProjects = [],
   language,
   theme,
   selectedWard,
   onSelectWard,
   onAdminResolveTicket,
+  onCreateProject,
+  onUpdateProjectStatus,
 }) => {
   const isDark = theme === 'dark';
   const t = translations[language];
 
   const wardsList: WardName[] = ['Panchavati', 'Nashik East', 'Nashik West', 'Cidco', 'Satpur', 'Nashik Road'];
   const [selectedDept, setSelectedDept] = useState<DepartmentType | 'ALL'>('ALL');
-  const [activeTab, setActiveTab] = useState<'PRIORITY_QUEUE' | 'REGISTERED_USERS'>('PRIORITY_QUEUE');
+  const [activeTab, setActiveTab] = useState<'PRIORITY_QUEUE' | 'ROAD_PROJECTS' | 'REGISTERED_USERS' | 'EXPORT_REPORTS'>('PRIORITY_QUEUE');
   
   const [usersList, setUsersList] = useState<UserAccount[]>([]);
   const [selectedTicketForProof, setSelectedTicketForProof] = useState<CivicTicket | null>(null);
   const [proofPhotoUrl, setProofPhotoUrl] = useState('');
   const [resolutionNotes, setResolutionNotes] = useState('');
+
+  // Road Project Creation Form State
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [tenderIdInput, setTenderIdInput] = useState('');
+  const [roadNameInput, setRoadNameInput] = useState('');
+  const [budgetInput, setBudgetInput] = useState('');
+  const [contractorInput, setContractorInput] = useState('');
+  const [dlpInput, setDlpInput] = useState('36 Months DLP');
+  const [projectWardInput, setProjectWardInput] = useState<WardName>('Panchavati');
 
   useEffect(() => {
     async function loadUsers() {
@@ -140,10 +155,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
 
         {/* Top Navigation Tabs for Admin */}
-        <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+        <div className="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto">
           <button
             onClick={() => setActiveTab('PRIORITY_QUEUE')}
-            className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition ${
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition whitespace-nowrap ${
               activeTab === 'PRIORITY_QUEUE'
                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
                 : 'text-slate-400 hover:bg-slate-800 hover:text-white'
@@ -154,15 +169,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveTab('ROAD_PROJECTS')}
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition whitespace-nowrap ${
+              activeTab === 'ROAD_PROJECTS'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <HardHat className="w-4 h-4 text-amber-400" />
+            <span>Road Projects & DLP ({roadProjects.length})</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('REGISTERED_USERS')}
-            className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition ${
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition whitespace-nowrap ${
               activeTab === 'REGISTERED_USERS'
                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
                 : 'text-slate-400 hover:bg-slate-800 hover:text-white'
             }`}
           >
             <Users className="w-4 h-4 text-emerald-400" />
-            <span>Registered Citizens & Accounts ({usersList.length})</span>
+            <span>Registered Citizens ({usersList.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('EXPORT_REPORTS')}
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition whitespace-nowrap ${
+              activeTab === 'EXPORT_REPORTS'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <FileText className="w-4 h-4 text-blue-400" />
+            <span>Export Reports (CSV/PDF)</span>
           </button>
         </div>
 
@@ -337,7 +376,79 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
 
-        {/* TAB 2: REGISTERED CITIZENS & ACCOUNTS */}
+        {/* TAB 2: ROAD PROJECTS & DLP TRACKER (TC-03 & TC-05) */}
+        {activeTab === 'ROAD_PROJECTS' && (
+          <div className="space-y-4">
+            <div className={`p-4 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+              isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+            }`}>
+              <div>
+                <h3 className={`text-sm font-extrabold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  <HardHat className="w-4 h-4 text-amber-400" />
+                  Road Works & DLP Contractor Registry
+                </h3>
+                <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Manage tender IDs, budget, contractor DLP dates, and lifecycle state transitions
+                </p>
+              </div>
+
+              <button
+                onClick={() => setIsProjectModalOpen(true)}
+                className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-lg transition transform active:scale-95 shrink-0"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>+ Create New Road Project (TC-03)</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {roadProjects
+                .filter((p) => selectedWard === 'All Wards' || p.ward === selectedWard)
+                .map((project) => (
+                  <div key={project.id} className={`p-4 rounded-2xl border space-y-3 ${isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">{project.tenderId}</span>
+                      <span className="text-emerald-400 font-bold">{project.dlpPeriod}</span>
+                    </div>
+
+                    <div>
+                      <h4 className={`text-sm font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>{project.roadName}</h4>
+                      <p className="text-xs text-slate-400">📍 {project.ward} Ward • Contractor: {project.contractor}</p>
+                      <p className="text-xs text-indigo-400 font-bold mt-0.5">Budget: {project.budgetInr}</p>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-800">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                        Lifecycle State Transition (TC-05):
+                      </label>
+                      <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-extrabold">
+                        {[
+                          { state: 'TRENCHING', label: '🔴 Proposed / Trenching' },
+                          { state: 'CONCRETING', label: '🟡 Concreting' },
+                          { state: 'CURING', label: '🔵 Curing' },
+                          { state: 'COMPLETED', label: '🟢 Completed' },
+                        ].map((s) => (
+                          <button
+                            key={s.state}
+                            onClick={() => onUpdateProjectStatus && onUpdateProjectStatus(project.id, s.state as any)}
+                            className={`px-2.5 py-1 rounded-lg border transition ${
+                              project.state === s.state
+                                ? 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow'
+                                : 'bg-slate-800 text-slate-400 hover:text-white border-slate-700'
+                            }`}
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: REGISTERED CITIZENS */}
         {activeTab === 'REGISTERED_USERS' && (
           <div className={`rounded-2xl border overflow-hidden ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
             <div className={`p-4 border-b flex items-center justify-between ${isDark ? 'border-slate-800 bg-slate-950/40' : 'border-slate-200 bg-slate-50'}`}>
@@ -400,6 +511,173 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: EXPORT WARD REPORTS (TC-10) */}
+        {activeTab === 'EXPORT_REPORTS' && (
+          <div className={`p-6 rounded-2xl border space-y-4 ${isDark ? 'bg-slate-900/90 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900 shadow-sm'}`}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold">Ward-wise Municipal Report Generator & CSV/PDF Export (TC-10)</h3>
+                <p className="text-xs text-slate-400">Generate and download official CSV report logs for {selectedWard}</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
+              <p className="text-xs text-slate-300">
+                Export report includes all registered complaints, contractor DLP records, resolution evidence URLs, and citizen verification audit logs for <strong>{selectedWard}</strong>.
+              </p>
+
+              <button
+                onClick={async () => {
+                  const data = await exportWardReportData(selectedWard);
+                  if (data && data.csvPreview) {
+                    const blob = new Blob([data.csvPreview], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Nashik_Civic_Report_${selectedWard.replace(/ /g, '_')}.csv`;
+                    a.click();
+                  }
+                }}
+                className="bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg transition transform active:scale-95"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Ward CSV Report ({selectedWard})</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ROAD PROJECT CREATION MODAL (TC-03) */}
+        {isProjectModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+            <div className={`w-full max-w-md rounded-2xl p-6 shadow-2xl border ${
+              isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
+            }`}>
+              <h3 className="text-base font-extrabold mb-1">Create New Road Project (TC-03)</h3>
+              <p className="text-xs text-slate-400 mb-4">Enter tender ID, road name, budget, contractor agency & DLP period</p>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (onCreateProject && roadNameInput) {
+                    onCreateProject({
+                      tenderId: tenderIdInput || `NMC-TND-2026-${Math.floor(100 + Math.random() * 900)}`,
+                      roadName: roadNameInput,
+                      roadNameMr: roadNameInput,
+                      budgetInr: budgetInput || '₹ 2.50 Cr',
+                      contractor: contractorInput || 'NMC Rapid Infra',
+                      dlpPeriod: dlpInput,
+                      ward: projectWardInput,
+                      state: 'TRENCHING',
+                      startDate: '15 Sep 2026',
+                      expectedCompletion: 'Dec 2026',
+                      coordinates: [20.0050, 73.7800],
+                      progressPhoto: 'https://images.unsplash.com/photo-1541888946425-d0fbb186a5b2?w=600&auto=format&fit=crop&q=80',
+                      description: 'White topping & asphalt work.'
+                    });
+                  }
+                  setIsProjectModalOpen(false);
+                  setRoadNameInput('');
+                  setTenderIdInput('');
+                  setBudgetInput('');
+                  setContractorInput('');
+                }}
+                className="space-y-3 text-xs"
+              >
+                <div>
+                  <label className="block font-bold mb-1">Tender ID Number</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. NMC-TND-2026-084"
+                    value={tenderIdInput}
+                    onChange={(e) => setTenderIdInput(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Road Work Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Gangapur Road Concreting"
+                    value={roadNameInput}
+                    onChange={(e) => setRoadNameInput(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block font-bold mb-1">Budget (INR)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. ₹ 4.80 Cr"
+                      value={budgetInput}
+                      onChange={(e) => setBudgetInput(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1">DLP Guarantee Period</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 36 Months DLP"
+                      value={dlpInput}
+                      onChange={(e) => setDlpInput(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Contractor Agency</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. L&T Smart Infra Nashik"
+                    value={contractorInput}
+                    onChange={(e) => setContractorInput(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Ward</label>
+                  <select
+                    value={projectWardInput}
+                    onChange={(e) => setProjectWardInput(e.target.value as any)}
+                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    {wardsList.map((w) => (
+                      <option key={w} value={w}>{w}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsProjectModalOpen(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-amber-600 text-white font-extrabold shadow-lg"
+                  >
+                    Create Road Project
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

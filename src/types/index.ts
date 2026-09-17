@@ -52,6 +52,7 @@ export interface TicketComment {
 
 export interface RoadWorkProject {
   id: string;
+  tenderId?: string;
   roadName: string;
   roadNameMr: string;
   ward: WardName;

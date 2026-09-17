@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { CivicTicket, Language, WardName, ThemeMode } from '../types';
 import { translations } from '../data/translations';
-import { CheckCircle, XCircle, AlertTriangle, ShieldCheck, User, Building, MapPin, Eye, Award } from 'lucide-react';
+import { UserAccount } from '../services/api';
+import { CheckCircle, XCircle, AlertTriangle, ShieldCheck, User, Building, MapPin, Eye, Award, Lock } from 'lucide-react';
 
 interface VerificationTrackerProps {
   tickets: CivicTicket[];
   language: Language;
   selectedWard: WardName;
   theme: ThemeMode;
+  currentUser?: UserAccount | null;
   onUpdateTicketVote: (ticketId: string, action: 'confirm' | 'reopen') => void;
 }
 
@@ -16,6 +18,7 @@ export const VerificationTracker: React.FC<VerificationTrackerProps> = ({
   language,
   selectedWard,
   theme,
+  currentUser,
   onUpdateTicketVote,
 }) => {
   const t = translations[language];
@@ -30,8 +33,28 @@ export const VerificationTracker: React.FC<VerificationTrackerProps> = ({
 
   const currentTicket = filteredTickets.find((t) => t.id === activeTicketId) || filteredTickets[0];
 
+  // Reporter Authorization check: ONLY the reporter of this complaint can verify and close it
+  const isOriginalReporter = Boolean(
+    currentTicket &&
+    currentUser &&
+    (
+      (currentTicket.reporterName && currentUser.name.trim().toLowerCase() === currentTicket.reporterName.trim().toLowerCase()) ||
+      (currentTicket.reporterMobile && currentUser.mobile === currentTicket.reporterMobile)
+    )
+  );
+
   const handleVote = (action: 'confirm' | 'reopen') => {
     if (!currentTicket) return;
+
+    if (!isOriginalReporter) {
+      const reporterDisplay = currentTicket.reporterName || 'the original reporter';
+      setNotification({
+        message: `🔒 Access Denied: Only ${reporterDisplay} (who reported this defect) can perform citizen verification & close this ticket.`,
+        type: 'error',
+      });
+      setTimeout(() => setNotification(null), 5000);
+      return;
+    }
 
     onUpdateTicketVote(currentTicket.id, action);
 
@@ -243,14 +266,28 @@ export const VerificationTracker: React.FC<VerificationTrackerProps> = ({
               </div>
 
               <div className="pt-4 border-t border-slate-700/50">
-                <p className={`text-xs font-semibold mb-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                  Did the contractor properly resolve this defect at the site? Cast your citizen vote:
-                </p>
+                {!isOriginalReporter ? (
+                  <div className="mb-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>
+                      <strong>Reporter Authorization Lock:</strong> Only <strong>{currentTicket.reporterName || 'the original citizen reporter'}</strong> who logged this defect can audit and close this ticket.
+                      {!currentUser && ' Please sign in with your reporter account.'}
+                    </span>
+                  </div>
+                ) : (
+                  <p className={`text-xs font-semibold mb-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    ✓ <strong>Original Reporter Verified:</strong> You filed this complaint. Please verify if the contractor properly resolved this defect at the site:
+                  </p>
+                )}
+
                 <div className="flex flex-wrap gap-3">
                   <button
                     onClick={() => handleVote('confirm')}
+                    disabled={!isOriginalReporter}
                     className={`flex-1 min-w-[200px] py-3 px-4 rounded-2xl font-bold text-xs md:text-sm flex items-center justify-center gap-2 transition transform active:scale-95 shadow-lg ${
-                      currentTicket.userVerificationState === 'confirmed'
+                      !isOriginalReporter
+                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-60 border border-slate-700'
+                        : currentTicket.userVerificationState === 'confirmed'
                         ? 'bg-emerald-600 text-white border-2 border-emerald-400'
                         : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white'
                     }`}
@@ -261,8 +298,11 @@ export const VerificationTracker: React.FC<VerificationTrackerProps> = ({
 
                   <button
                     onClick={() => handleVote('reopen')}
+                    disabled={!isOriginalReporter}
                     className={`flex-1 min-w-[200px] py-3 px-4 rounded-2xl font-bold text-xs md:text-sm flex items-center justify-center gap-2 transition transform active:scale-95 shadow-lg ${
-                      currentTicket.userVerificationState === 'reopened'
+                      !isOriginalReporter
+                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-60 border border-slate-700'
+                        : currentTicket.userVerificationState === 'reopened'
                         ? 'bg-red-600 text-white border-2 border-red-400'
                         : 'bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white'
                     }`}

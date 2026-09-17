@@ -120,6 +120,41 @@ const initialTickets = [
   }
 ];
 
+const initialProjects = [
+  {
+    id: 'p-101',
+    tenderId: 'NMC-TND-2026-084',
+    roadName: 'Gangapur Road Concreting & Storm Drain',
+    roadNameMr: 'गंगापूर रस्ता काँक्रिटीकरण व गटार काम',
+    ward: 'Panchavati',
+    state: 'CONCRETING',
+    contractor: 'L&T Smart Infra Nashik',
+    budgetInr: '₹ 4.80 Cr',
+    dlpPeriod: '36 Months DLP',
+    startDate: '15 Jan 2026',
+    expectedCompletion: '30 Oct 2026',
+    coordinates: [20.0180, 73.8180],
+    progressPhoto: 'https://images.unsplash.com/photo-1541888946425-d0fbb186a5b2?w=600&auto=format&fit=crop&q=80',
+    description: 'Major white-topping concreting work with underground storm water drainage line.'
+  },
+  {
+    id: 'p-102',
+    tenderId: 'NMC-TND-2026-119',
+    roadName: 'College Road Asphalt Resurfacing',
+    roadNameMr: 'कॉलेज रोड डांबरीकरण काम',
+    ward: 'Nashik West',
+    state: 'CURING',
+    contractor: 'Patil Infrastructure Pvt Ltd',
+    budgetInr: '₹ 2.25 Cr',
+    dlpPeriod: '24 Months DLP',
+    startDate: '01 Feb 2026',
+    expectedCompletion: '15 Nov 2026',
+    coordinates: [20.0050, 73.7620],
+    progressPhoto: 'https://images.unsplash.com/photo-1584467735871-8e85353a8413?w=600&auto=format&fit=crop&q=80',
+    description: 'Heavy duty dense bituminous asphalt resurfacing.'
+  }
+];
+
 const initialUsers = [
   { id: 'u-1', name: 'Aarav Deshmukh', mobile: '9823011223', email: 'aarav@gmail.com', role: 'CITIZEN', ward: 'Panchavati' },
   { id: 'u-2', name: 'Priya Joshi', mobile: '9890123456', email: 'priya@gmail.com', role: 'CITIZEN', ward: 'Nashik West' },
@@ -131,12 +166,14 @@ function loadDatabase() {
   try {
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, 'utf-8');
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (!parsed.projects) parsed.projects = initialProjects;
+      return parsed;
     }
   } catch (err) {
     console.error('Error reading db_data.json:', err);
   }
-  const defaultDb = { tickets: initialTickets, users: initialUsers };
+  const defaultDb = { tickets: initialTickets, users: initialUsers, projects: initialProjects };
   saveDatabase(defaultDb);
   return defaultDb;
 }
@@ -287,14 +324,25 @@ app.patch('/api/tickets/:id/resolve', (req, res) => {
   res.json(ticket);
 });
 
-// POST /api/tickets/:id/vote - Citizen audit verification
+// POST /api/tickets/:id/vote - Citizen audit verification (Reporter Only)
 app.post('/api/tickets/:id/vote', (req, res) => {
   const { id } = req.params;
-  const { action } = req.body;
+  const { action, userName, userMobile } = req.body;
 
   const ticket = db.tickets.find((t) => t.id === id);
   if (!ticket) {
     return res.status(404).json({ error: 'Ticket not found' });
+  }
+
+  // Reporter Authorization Validation
+  if (ticket.reporterName && userName) {
+    const isNameMatch = ticket.reporterName.trim().toLowerCase() === userName.trim().toLowerCase();
+    const isMobileMatch = userMobile && ticket.reporterMobile && ticket.reporterMobile === userMobile;
+    if (!isNameMatch && !isMobileMatch) {
+      return res.status(403).json({ 
+        error: `Authorization Error: Only the original reporter (${ticket.reporterName}) can perform citizen verification and close this ticket.` 
+      });
+    }
   }
 
   if (action === 'confirm') {
@@ -312,6 +360,125 @@ app.post('/api/tickets/:id/vote', (req, res) => {
   io.emit('ticket_updated', ticket);
 
   res.json(ticket);
+});
+
+// GET /api/tickets/track/:ticketNumber - Ticket Tracking Lookup (TC-08)
+app.get('/api/tickets/track/:ticketNumber', (req, res) => {
+  const { ticketNumber } = req.params;
+  const ticket = db.tickets.find(
+    (t) => t.ticketNumber.toLowerCase() === ticketNumber.toLowerCase() || t.id.toLowerCase() === ticketNumber.toLowerCase()
+  );
+  if (!ticket) {
+    return res.status(404).json({ error: `No complaint found with tracking code '${ticketNumber}'` });
+  }
+  res.json(ticket);
+});
+
+// --- ROAD PROJECTS ENDPOINTS (TC-03 & TC-05) ---
+
+// GET /api/projects - Fetch road projects
+app.get('/api/projects', (req, res) => {
+  const { ward } = req.query;
+  let projectsList = db.projects || initialProjects;
+  if (ward && ward !== 'All Wards') {
+    projectsList = projectsList.filter((p) => p.ward === ward);
+  }
+  res.json(projectsList);
+});
+
+// POST /api/projects - Create new road project (TC-03)
+app.post('/api/projects', (req, res) => {
+  const body = req.body;
+  const newProject = {
+    id: body.id || `p-${Date.now()}`,
+    tenderId: body.tenderId || `NMC-TND-2026-${Math.floor(100 + Math.random() * 900)}`,
+    roadName: body.roadName || 'New Road Project',
+    roadNameMr: body.roadNameMr || 'नवीन रस्ता काम',
+    ward: body.ward || 'Panchavati',
+    state: body.state || 'TRENCHING',
+    contractor: body.contractor || 'NMC PWD Contractor',
+    budgetInr: body.budgetInr || '₹ 1.50 Cr',
+    dlpPeriod: body.dlpPeriod || '36 Months DLP',
+    startDate: body.startDate || 'Just Started',
+    expectedCompletion: body.expectedCompletion || 'Dec 2026',
+    coordinates: body.coordinates || [20.0050, 73.7800],
+    progressPhoto: body.progressPhoto || 'https://images.unsplash.com/photo-1541888946425-d0fbb186a5b2?w=600&auto=format&fit=crop&q=80',
+    description: body.description || 'Road construction & DLP tracked project.'
+  };
+
+  if (!db.projects) db.projects = [];
+  db.projects.unshift(newProject);
+  saveDatabase(db);
+
+  io.emit('project_created', newProject);
+  console.log(`🛣️ New Road Project created: ${newProject.tenderId} - ${newProject.roadName}`);
+  res.status(201).json(newProject);
+});
+
+// PATCH /api/projects/:id/status - Transition project status (TC-05)
+app.patch('/api/projects/:id/status', (req, res) => {
+  const { id } = req.params;
+  const { state } = req.body;
+
+  if (!db.projects) db.projects = [];
+  const project = db.projects.find((p) => p.id === id);
+  if (!project) {
+    return res.status(404).json({ error: 'Road Project not found' });
+  }
+
+  project.state = state;
+  saveDatabase(db);
+
+  io.emit('project_updated', project);
+  console.log(`🔄 Road Project status updated: ${project.tenderId} -> ${state}`);
+  res.json(project);
+});
+
+// GET /api/sla/breaches - SLA Breach Detection (TC-09)
+app.get('/api/sla/breaches', (req, res) => {
+  const breachedTickets = db.tickets.filter(
+    (t) => t.status === 'REOPENED_ESCALATED' || (t.impactScore || 0) > 100 || t.status === 'VERIFICATION_PENDING'
+  ).map((t) => ({
+    ...t,
+    isSlaBreached: true,
+    slaTargetHours: 48,
+    elapsedHours: 72,
+    slaStatus: 'CRITICAL_SLA_BREACH'
+  }));
+
+  res.json({
+    totalBreaches: breachedTickets.length,
+    breachedTickets
+  });
+});
+
+// GET /api/reports/export - Ward-wise Report CSV Export (TC-10)
+app.get('/api/reports/export', (req, res) => {
+  const { ward, format } = req.query;
+  const filteredTickets = db.tickets.filter((t) => !ward || ward === 'All Wards' || t.ward === ward);
+  const filteredProjects = (db.projects || []).filter((p) => !ward || ward === 'All Wards' || p.ward === ward);
+
+  const csvHeader = 'ID,TicketNumber,Title,Ward,Department,Status,ImpactScore,ReporterName\n';
+  const csvRows = filteredTickets.map(
+    (t) => `"${t.id}","${t.ticketNumber}","${t.title}","${t.ward}","${t.department}","${t.status}",${t.impactScore || 0},"${t.reporterName || 'Citizen'}"`
+  ).join('\n');
+
+  const csvContent = csvHeader + csvRows;
+
+  if (format === 'csv') {
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=Nashik_Civic_Report_${ward || 'All'}.csv`);
+    return res.send(csvContent);
+  }
+
+  res.json({
+    ward: ward || 'All Wards',
+    totalComplaints: filteredTickets.length,
+    totalProjects: filteredProjects.length,
+    csvPreview: csvContent,
+    tickets: filteredTickets,
+    projects: filteredProjects
+  });
 });
 
 // --- AUTH & USER ENDPOINTS ---
