@@ -29,6 +29,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const t = translations[language];
 
   const wardsList: WardName[] = ['Panchavati', 'Nashik East', 'Nashik West', 'Cidco', 'Satpur', 'Nashik Road'];
+  const WARD_CENTROIDS: Record<WardName, [number, number]> = {
+    'Panchavati': [20.0080, 73.7925],
+    'Nashik West': [20.0035, 73.7668],
+    'Nashik East': [19.9970, 73.7780],
+    'Cidco': [19.9720, 73.7650],
+    'Satpur': [19.9980, 73.7380],
+    'Nashik Road': [19.9650, 73.8180],
+    'All Wards': [19.9975, 73.7898]
+  };
   const [selectedDept, setSelectedDept] = useState<DepartmentType | 'ALL'>('ALL');
   const [activeTab, setActiveTab] = useState<'PRIORITY_QUEUE' | 'ROAD_PROJECTS' | 'REGISTERED_USERS' | 'EXPORT_REPORTS'>('PRIORITY_QUEUE');
   
@@ -594,7 +603,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       state: 'TRENCHING',
                       startDate: '15 Sep 2026',
                       expectedCompletion: 'Dec 2026',
-                      coordinates: [20.0050, 73.7800],
+                      coordinates: WARD_CENTROIDS[projectWardInput] || [20.0050, 73.7800],
                       progressPhoto: 'https://images.unsplash.com/photo-1541888946425-d0fbb186a5b2?w=600&auto=format&fit=crop&q=80',
                       description: 'White topping & asphalt work.'
                     });

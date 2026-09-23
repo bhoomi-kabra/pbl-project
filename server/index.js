@@ -100,6 +100,7 @@ let db = loadDatabase();
 
 // GET /api/tickets - Fetch all tickets
 app.get('/api/tickets', (req, res) => {
+  db = loadDatabase();
   res.json(db.tickets);
 });
 

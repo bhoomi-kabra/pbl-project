@@ -249,8 +249,9 @@ export function App() {
     await resolveTicketInDatabase(ticketId, proofPhotoUrl, notes);
 
     setLiveToastNotification(`📸 ADMIN PROOF SAVED TO BACKEND DB: Ticket ${ticketId} resolved.`);
-    setTimeout(() => setLiveToastNotification(null), 4000);
   };
+
+  const isDark = false;
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-slate-50 text-slate-900 pb-16 md:pb-0 selection:bg-emerald-500 selection:text-white">
@@ -384,7 +385,7 @@ export function App() {
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
       />
 
-      <footer className={`${isDark ? 'bg-slate-950 border-slate-800 text-slate-400' : 'bg-slate-900 border-slate-800 text-slate-300'} border-t text-xs py-8 px-4 transition-colors duration-300 mb-12 md:mb-0`}>
+      <footer className="bg-slate-900 border-t border-slate-800 text-slate-300 text-xs py-8 px-4 mb-12 md:mb-0">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">

@@ -2,7 +2,17 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { RoadWorkProject, CivicTicket, WardName, LifecycleState, Language, ThemeMode } from '../types';
 import { translations } from '../data/translations';
-import { MapPin, Filter, AlertCircle, HardHat, DollarSign, Calendar, Eye, Layers, AlertTriangle, CheckCircle2, ThumbsUp } from 'lucide-react';
+import { MapPin, Filter, AlertCircle, HardHat, DollarSign, Calendar, Eye, Layers, AlertTriangle, CheckCircle2, ThumbsUp, ChevronRight, ArrowLeft } from 'lucide-react';
+
+const WARD_CENTROIDS: Record<WardName, [number, number]> = {
+  'Panchavati': [20.0080, 73.7925],
+  'Nashik West': [20.0035, 73.7668],
+  'Nashik East': [19.9970, 73.7780],
+  'Cidco': [19.9720, 73.7650],
+  'Satpur': [19.9980, 73.7380],
+  'Nashik Road': [19.9650, 73.8180],
+  'All Wards': [19.9975, 73.7898]
+};
 
 interface GisMapProps {
   projects: RoadWorkProject[];
@@ -29,6 +39,24 @@ export const GisMap: React.FC<GisMapProps> = ({
   const [activeLayerFilter, setActiveLayerFilter] = useState<'ALL' | 'COMPLAINTS' | 'PROJECTS'>('ALL');
   const [selectedStateFilter, setSelectedStateFilter] = useState<LifecycleState | 'ALL'>('ALL');
   const [selectedItem, setSelectedItem] = useState<{ type: 'PROJECT'; data: RoadWorkProject } | { type: 'TICKET'; data: CivicTicket } | null>(null);
+
+  // Pan map when selectedWard changes
+  useEffect(() => {
+    const map = leafletMapRef.current;
+    if (!map) return;
+    if (selectedWard !== 'All Wards' && WARD_CENTROIDS[selectedWard]) {
+      map.setView(WARD_CENTROIDS[selectedWard], 14, { animate: true });
+    } else if (selectedWard === 'All Wards') {
+      map.setView([19.9975, 73.7898], 12, { animate: true });
+    }
+  }, [selectedWard]);
+
+  const handleSelectAndPan = (item: { type: 'PROJECT'; data: RoadWorkProject } | { type: 'TICKET'; data: CivicTicket }) => {
+    setSelectedItem(item);
+    if (leafletMapRef.current) {
+      leafletMapRef.current.setView(item.data.coordinates, 16, { animate: true });
+    }
+  };
 
   // Filter projects by ward and lifecycle state
   const filteredProjects = projects.filter((p) => {
