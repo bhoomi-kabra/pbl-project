@@ -31,7 +31,7 @@ import { Building2, Radio } from 'lucide-react';
 export function App() {
   const [selectedWard, setSelectedWard] = useState<WardName>('All Wards');
   const [language, setLanguage] = useState<Language>('en');
-  const [theme, setTheme] = useState<ThemeMode>('dark');
+  const [theme, setTheme] = useState<ThemeMode>('light');
   
   // Auth & User State
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
@@ -58,11 +58,11 @@ export function App() {
   useEffect(() => {
     async function loadDatabaseData() {
       const dbTickets = await fetchTicketsFromDatabase();
-      if (dbTickets && dbTickets.length > 0) {
+      if (Array.isArray(dbTickets)) {
         setTickets(dbTickets);
       }
       const dbProjects = await fetchProjectsFromDatabase();
-      if (dbProjects && dbProjects.length > 0) {
+      if (Array.isArray(dbProjects) && dbProjects.length > 0) {
         setRoadProjects(dbProjects);
       }
     }
@@ -252,19 +252,15 @@ export function App() {
     setTimeout(() => setLiveToastNotification(null), 4000);
   };
 
-  const isDark = theme === 'dark';
-
   return (
-    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-300 selection:bg-emerald-500 selection:text-white pb-16 md:pb-0 ${
-      isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
-    }`}>
+    <div className="min-h-screen flex flex-col font-sans bg-slate-50 text-slate-900 pb-16 md:pb-0 selection:bg-emerald-500 selection:text-white">
       {/* 1. Clean Header & Navigation Bar */}
       <Header
         selectedWard={selectedWard}
         onSelectWard={setSelectedWard}
         language={language}
         onToggleLanguage={toggleLanguage}
-        theme={theme}
+        theme="light"
         onToggleTheme={toggleTheme}
         onOpenReportModal={handleOpenGeneralReportModal}
         activeView={activeView}
@@ -277,7 +273,7 @@ export function App() {
 
       {/* Live Toast Notification Banner */}
       {liveToastNotification && (
-        <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white text-xs font-extrabold px-4 py-2 flex items-center justify-center gap-2 shadow-lg animate-in fade-in slide-in-from-top-2 duration-200 sticky top-14 z-30">
+        <div className="bg-emerald-600 text-white text-xs font-extrabold px-4 py-2 flex items-center justify-center gap-2 shadow-md animate-in fade-in slide-in-from-top-2 duration-200 sticky top-14 z-30">
           <Radio className="w-4 h-4 animate-pulse" />
           <span>{liveToastNotification}</span>
         </div>
@@ -303,10 +299,13 @@ export function App() {
               language={language}
               selectedWard={selectedWard}
               theme={theme}
+              tickets={tickets}
+              projects={roadProjects}
             />
 
             <GisMap
               projects={roadProjects}
+              tickets={tickets}
               selectedWard={selectedWard}
               onSelectWard={setSelectedWard}
               language={language}

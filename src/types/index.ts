@@ -25,10 +25,12 @@ export type TicketStatus =
 export type HazardType = 
   | 'ELECTRICAL_HAZARD'
   | 'POTHOLE'
+  | 'ROAD_COLLAPSE'
   | 'UNAUTHORIZED_EXCAVATION'
   | 'WATER_LEAKAGE'
   | 'STREETLIGHT_DEFECT'
   | 'DRAINAGE_OVERFLOW'
+  | 'GARBAGE_DUMP'
   | 'OTHER';
 
 export type DepartmentType = 
