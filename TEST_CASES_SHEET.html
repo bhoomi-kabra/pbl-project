@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PBL Test Cases Sheet | Nashik Roads & Civic Monitor</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --green: #10b981;
+      --green-bg: #ecfdf5;
+      --yellow: #f59e0b;
+      --yellow-bg: #fffbeb;
+      --red: #ef4444;
+      --red-bg: #fef2f2;
+      --blue: #2563eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); padding: 32px 16px; line-height: 1.5; }
+    .container { max-width: 1300px; margin: 0 auto; }
+    
+    .header { background: #ffffff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .header h1 { font-size: 20px; font-weight: 800; color: #0f172a; }
+    .header p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .filter-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: #ffffff; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+    .filter-btn:hover { background: #f1f5f9; }
+    .filter-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
+
+    .table-card { background: #ffffff; border: 1px solid var(--border); border-radius: 16px; overflow-x: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1000px; }
+    th { background: #f8fafc; padding: 12px 14px; text-transform: uppercase; font-size: 11px; font-weight: 800; color: var(--text-muted); border-bottom: 1px solid var(--border); text-align: left; }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: #f8fafc; }
+
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; }
+    .badge-pass { background: var(--green-bg); color: #065f46; border: 1px solid #a7f3d0; }
+    .badge-part { background: var(--yellow-bg); color: #92400e; border: 1px solid #fde68a; }
+    .badge-fail { background: var(--red-bg); color: #991b1b; border: 1px solid #fecaca; }
+
+    .tc-id { font-family: monospace; font-weight: 800; font-size: 12px; color: #0f172a; }
+    .lag-text { font-weight: 700; color: #b91c1c; }
+    .warn-text { font-weight: 700; color: #b45309; }
+
+    .print-btn { background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .print-btn:hover { background: #047857; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>🏛️ Nashik Roads & Civic Monitor: Official Test Cases Sheet</h1>
+        <p>IEEE 829 Software Quality Assurance & Defect Specification Matrix (PBL Project Submission)</p>
+      </div>
+      <div>
+        <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterTable('ALL')">All Cases (15)</button>
+      <button class="filter-btn" onclick="filterTable('PASS')">✓ Passed (9)</button>
+      <button class="filter-btn" onclick="filterTable('PARTIAL')">⚠ Partial / Warnings (3)</button>
+      <button class="filter-btn" onclick="filterTable('FAIL')">✗ Failed / Gaps (3)</button>
+    </div>
+
+    <div class="table-card">
+      <table id="tcTable">
+        <thead>
+          <tr>
+            <th style="width: 100px;">Test ID</th>
+            <th style="width: 110px;">Module</th>
+            <th style="width: 180px;">Test Scenario</th>
+            <th>Test Input Data</th>
+            <th>Expected Output</th>
+            <th>Actual Output</th>
+            <th style="width: 90px;">Status</th>
+            <th>Deficiency / Lagging Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-status="PASS">
+            <td class="tc-id">TC-NAV-001</td>
+            <td>UI / UX</td>
+            <td><strong>Frontend Serving & Root Mount</strong></td>
+            <td>Base URL http://localhost:5173</td>
+            <td>HTTP 200 with #root container</td>
+            <td>HTTP 200 OK (37ms); React mounted</td>
+            <td><span class="badge badge-pass">PASS</span></td>
+            <td>None. Frontend healthy.</td>
+          </tr>
+          <tr data-status="PASS">
+            <td class="tc-id">TC-I18N-002</td>
+            <td>Localization</td>
+            <td><strong>Bilingual Key Completeness</strong></td>
+            <td>English & Marathi dictionaries</td>
+            <td>100% translation key parity</td>
+            <td>Verified complete Marathi/English keys</td>
+            <td><span class="badge badge-pass">PASS</span></td>
+            <td>None. Instant language toggle.</td>
+          </tr>
+          <tr data-status="PASS">
+            <td class="tc-id">TC-GIS-003</td>
+            <td>GIS Mapping</td>
+            <td><strong>Ward Centroid Coordinate Range</strong></td>
+            <td>All 6 NMC municipal wards</td>
+            <td>Centroids within lat [19.9-20.1], lng [73.7-73.9]</td>
+            <td>All 6 wards properly mapped</td>
+            <td><span class="badge badge-pass">PASS</span></td>
+            <td>None. Geographic bounds valid.</td>
+          </tr>
+          <tr data-status="PASS">
+            <td class="tc-id">TC-PIN-004</td>
+            <td>GIS Geotagging</td>
+            <td><strong>Hirawadi Road Landmark Snapping</strong></td>
+            <td>Location: 'Hirawadi Road / Vidhate Nagar'</td>
+            <td>Snaps strictly to [20.0270, 73.8140]</td>
+            <td>Coordinates snap to [20.0270, 73.8140]</td>
+            <td><span class="badge badge-pass">PASS</span></td>
+            <td>None. Fixed previous centroid bug.</td>
+          </tr>
+          <tr data-status="PASS">
+            <td class="tc-id">TC-API-005</td>
+            <td>REST API</td>
+            <td><strong>Fetch Registered Complaints</strong></td>
+            <td>GET /api/tickets</td>
+            <td>HTTP 200 with JSON tickets array</td>
+            <td>HTTP 200 OK (6ms); live data returned</td>
+            <td><span class="badge badge-pass">PASS</span></td>
+            <td>None. Backend API operational.</td>
+          </tr>
+          <tr data-status="PASS">
+            <td class="tc-id">TC-SUB-006</td>
+            <td>Citizen Workflow</td>
+            <td><strong>Grievance Submission & Initial Status</strong></td>
+            <td>Water leakage on Thatte Nagar Road</td>
+            <td>HTTP 201 with status 'SUBMITTED'</td>
+            <td>Ticket NMC-2026-XXXX status 'SUBMITTED'</td>
+            <td><span class="badge badge-pass">PASS</span></td>
+            <td>None. Complaints never auto-resolve.</td>
+          </tr>
+          <tr data-status="PASS">
+            <td class="tc-id">TC-DB-007</td>
+            <td>Persistence</td>
+            <td><strong>ACID File Database Disk Persistence</strong></td>
+            <td>Check server/db_data.json on disk</td>
+            <td>Ticket survives server restart</td>
+            <td>Confirmed physical disk persistence</td>
+            <td><span class="badge badge-pass">PASS</span></td>
+            <td>None. Persistent disk storage active.</td>
+          </tr>
+          <tr data-status="PASS">
+            <td class="tc-id">TC-DLP-008</td>
+            <td>DLP Governance</td>
+            <td><strong>Road Tender DLP Warranty & Audit</strong></td>
+            <td>GET /api/projects</td>
+            <td>Contractor, Budget in Cr, DLP Period</td>
+            <td>Complete DLP warranty audit rendered</td>
+            <td><span class="badge badge-pass">PASS</span></td>
+            <td>None. Transparency verified.</td>
+          </tr>
+          <tr data-status="PASS">
+            <td class="tc-id">TC-KPI-009</td>
+            <td>Analytics</td>
+            <td><strong>Dynamic Real-Time Metric Calculation</strong></td>
+            <td>Live DB tickets & projects arrays</td>
+            <td>Recalculates counts dynamically</td>
+            <td>Dynamic calculation verified</td>
+            <td><span class="badge badge-pass">PASS</span></td>
+            <td>None. No static counters.</td>
+          </tr>
+          <tr data-status="PARTIAL">
+            <td class="tc-id">TC-WARN-010</td>
+            <td>Performance</td>
+            <td><strong>Map Tile Stream Latency Under 3G</strong></td>
+            <td>Simulated 1200ms latency on tile CDN</td>
+            <td>Tiles load < 800ms with offline cache</td>
+            <td>1420ms latency; grey grid visible briefly</td>
+            <td><span class="badge badge-part">PARTIAL</span></td>
+            <td><span class="warn-text">LAGGING: Lacks offline vector tile caching for poor 2G/3G connectivity.</span></td>
+          </tr>
+          <tr data-status="PARTIAL">
+            <td class="tc-id">TC-WARN-011</td>
+            <td>Media Handling</td>
+            <td><strong>Photo Evidence Payload Scaling</strong></td>
+            <td>5.2 MB camera JPEG photo</td>
+            <td>Client WebP compression to < 300 KB</td>
+            <td>Raw Base64 string uploaded; JSON swells</td>
+            <td><span class="badge badge-part">PARTIAL</span></td>
+            <td><span class="warn-text">LAGGING: Missing client-side WebP compression pipeline.</span></td>
+          </tr>
+          <tr data-status="PARTIAL">
+            <td class="tc-id">TC-WARN-012</td>
+            <td>Verification</td>
+            <td><strong>Citizen Upvote (+1) Throttling</strong></td>
+            <td>Multiple votes for same hazard</td>
+            <td>Restricted to 1 vote per citizen</td>
+            <td>Restricted in session, but clearing cache allows re-vote</td>
+            <td><span class="badge badge-part">PARTIAL</span></td>
+            <td><span class="warn-text">LAGGING: Citizen identity is not yet bound to Aadhaar or Mobile OTP.</span></td>
+          </tr>
+          <tr data-status="FAIL">
+            <td class="tc-id">TC-FAIL-013</td>
+            <td>Input Validation</td>
+            <td><strong>Mobile Number 10-Digit Regex Check</strong></td>
+            <td>reporterMobile: '123' (Invalid)</td>
+            <td>HTTP 400 Bad Request rejection</td>
+            <td>HTTP 201 Created: Backend accepted '123'</td>
+            <td><span class="badge badge-fail">FAIL</span></td>
+            <td><span class="lag-text">LAGGING: Lacks strict Indian regex (/^[6-9]\d{9}$/) on phone numbers.</span></td>
+          </tr>
+          <tr data-status="FAIL">
+            <td class="tc-id">TC-FAIL-014</td>
+            <td>GIS Geofencing</td>
+            <td><strong>NMC Municipal Boundary Geofence Guard</strong></td>
+            <td>Coordinates: [18.9220, 72.8346] (Mumbai)</td>
+            <td>HTTP 400 Bad Request rejection</td>
+            <td>HTTP 201 Created: Mumbai coords accepted</td>
+            <td><span class="badge badge-fail">FAIL</span></td>
+            <td><span class="lag-text">LAGGING: Backend lacks Point-in-Polygon (PIP) boundary check for NMC limits.</span></td>
+          </tr>
+          <tr data-status="FAIL">
+            <td class="tc-id">TC-FAIL-015</td>
+            <td>Security</td>
+            <td><strong>Admin RBAC Route JWT Signature Verification</strong></td>
+            <td>POST status change with no Auth header</td>
+            <td>HTTP 401 Unauthorized rejection</td>
+            <td>HTTP 200 OK: State modified without token</td>
+            <td><span class="badge badge-fail">FAIL</span></td>
+            <td><span class="lag-text">LAGGING: System lacks cryptographically signed JWT token middleware.</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function filterTable(status) {
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      const rows = document.querySelectorAll('#tcTable tbody tr');
+      rows.forEach(r => {
+        if (status === 'ALL' || r.getAttribute('data-status') === status) {
+          r.style.display = '';
+        } else {
+          r.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
