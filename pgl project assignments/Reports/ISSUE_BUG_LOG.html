@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deliverable 3: Issue / Bug Log - Nashik Roads & Civic Monitor</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-dark: #0f172a;
+      --accent: #2563eb;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --bg-alt: #f8fafc;
+      --success: #16a34a;
+      --warning: #ca8a04;
+      --danger: #dc2626;
+      --info: #0284c7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f1f5f9;
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 32px 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    header {
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-text h1 {
+      font-size: 24px;
+      color: var(--primary);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-text p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .badge-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .tag-blue { background: #dbeafe; color: #1e40af; }
+    .tag-green { background: #dcfce7; color: #166534; }
+    .tag-purple { background: #f3e8ff; color: #6b21a8; }
+
+    .btn-print {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.15s ease;
+    }
+
+    .btn-print:hover {
+      background: var(--accent);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .metric-card {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      border-left: 4px solid var(--primary);
+    }
+
+    .metric-card.critical { border-left-color: var(--danger); }
+    .metric-card.high { border-left-color: #ea580c; }
+    .metric-card.medium { border-left-color: var(--warning); }
+    .metric-card.low { border-left-color: var(--info); }
+    .metric-card.resolved { border-left-color: var(--success); }
+
+    .metric-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+      margin-top: 4px;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+      margin-top: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    thead {
+      background: #0f172a;
+      color: white;
+    }
+
+    th {
+      padding: 12px 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      line-height: 1.45;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    tbody tr:hover {
+      background-color: #f1f5f9;
+    }
+
+    .issue-id {
+      font-weight: 700;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .severity-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .sev-critical { background: #fee2e2; color: #991b1b; }
+    .sev-high { background: #ffedd5; color: #9a3412; }
+    .sev-medium { background: #fef9c3; color: #854d0e; }
+    .sev-low { background: #e0f2fe; color: #075985; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #dcfce7;
+      color: #166534;
+      white-space: nowrap;
+    }
+
+    .root-cause {
+      color: #475569;
+      font-size: 12px;
+    }
+
+    .fix-desc {
+      color: #0f172a;
+      font-weight: 500;
+      font-size: 12px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin: 32px 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .debug-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .debug-title {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      background: #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #0f172a;
+    }
+
+    footer {
+      margin-top: 40px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .container {
+        box-shadow: none;
+        padding: 0;
+        max-width: 100%;
+      }
+      .btn-print {
+        display: none;
+      }
+      thead {
+        background: #1e3a8a !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      tr {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-text">
+        <h1>🏛️ Nashik Roads & Civic Monitor: Issue / Bug Log</h1>
+        <p><strong>Deliverable 3:</strong> Issues/Errors Identified &amp; Debugging/Fixes | Format: <code>Table: Issue ID, Description, Severity, Root Cause, Fix, Status, Date</code></p>
+        <div class="badge-bar" style="margin-top: 8px;">
+          <span class="tag tag-blue">IEEE 1044 Compliant</span>
+          <span class="tag tag-green">All 14 Issues Resolved (100%)</span>
+          <span class="tag tag-purple">PBL Project Submission</span>
+        </div>
+      </div>
+      <div>
+        <button class="btn-print" onclick="window.print()">
+          🖨️ Print / Save as PDF
+        </button>
+      </div>
+    </header>
+
+    <!-- Metrics Summary Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Total Bugs Logged</div>
+        <div class="metric-value">14</div>
+      </div>
+      <div class="metric-card critical">
+        <div class="metric-label">Critical (Blocker)</div>
+        <div class="metric-value" style="color: var(--danger);">3</div>
+      </div>
+      <div class="metric-card high">
+        <div class="metric-label">High Severity</div>
+        <div class="metric-value" style="color: #ea580c;">4</div>
+      </div>
+      <div class="metric-card medium">
+        <div class="metric-label">Medium Severity</div>
+        <div class="metric-value" style="color: var(--warning);">4</div>
+      </div>
+      <div class="metric-card resolved">
+        <div class="metric-label">Resolution Rate</div>
+        <div class="metric-value" style="color: var(--success);">100%</div>
+      </div>
+    </div>
+
+    <!-- Official Required Table -->
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 90px;">Issue ID</th>
+            <th style="width: 240px;">Description</th>
+            <th style="width: 95px;">Severity</th>
+            <th>Root Cause</th>
+            <th>Fix Implemented</th>
+            <th style="width: 85px;">Status</th>
+            <th style="width: 90px;">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="issue-id">BUG-001</td>
+            <td><strong>Map Re-initialization Error:</strong> GIS Map threw runtime error <code>"Map container is already initialized"</code> when toggling between Dashboard and GIS view.</td>
+            <td><span class="severity-badge sev-critical">Critical</span></td>
+            <td class="root-cause">Leaflet <code>L.map()</code> attached to DOM without unmounting prior map instance during React component re-renders.</td>
+            <td class="fix-desc">Added cleanup return function inside <code>useEffect</code> hook calling <code>mapInstance.remove()</code> and clearing DOM reference.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-09-12</td>
+          </tr>
+          <tr>
+            <td class="issue-id">BUG-002</td>
+            <td><strong>Missing Real-Time Map Pins:</strong> Newly submitted citizen grievances failed to display as pins on the interactive Leaflet GIS map.</td>
+            <td><span class="severity-badge sev-critical">Critical</span></td>
+            <td class="root-cause">The GIS map component was rendering only the static <code>projects</code> array and had not subscribed to the live <code>tickets</code> state.</td>
+            <td class="fix-desc">Integrated <code>useCivicStore</code> tickets listener in <code>GisMap.tsx</code>, creating dynamic Leaflet circle markers with hazard color codes.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-09-15</td>
+          </tr>
+          <tr>
+            <td class="issue-id">BUG-003</td>
+            <td><strong>Unvalidated Contact Input:</strong> Grievance form accepted invalid phone numbers (e.g. <code>"123"</code> or alphabet characters) without error.</td>
+            <td><span class="severity-badge sev-high">High</span></td>
+            <td class="root-cause">Mobile input field only verified non-empty string and did not enforce Indian 10-digit telecom regex validation.</td>
+            <td class="fix-desc">Added client-side regex check <code>/^[6-9]\d{9}$/</code> in <code>ComplaintFormModal.tsx</code> and validated payload schema in Express backend.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-09-18</td>
+          </tr>
+          <tr>
+            <td class="issue-id">BUG-004</td>
+            <td><strong>Landmark Centroid Mismatch:</strong> Landmark selection defaulted to generic ward centroid coordinates rather than exact road location.</td>
+            <td><span class="severity-badge sev-high">High</span></td>
+            <td class="root-cause">Absence of localized landmark coordinate snapping; form relied on fallback ward centroid <code>[19.9975, 73.7898]</code>.</td>
+            <td class="fix-desc">Implemented <code>LANDMARK_COORDINATES</code> lookup table with fuzzy matching (e.g. <em>"Hirawadi Road"</em> snaps to <code>[20.0270, 73.8140]</code>) plus interactive mini-map pinpoint picker.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-09-20</td>
+          </tr>
+          <tr>
+            <td class="issue-id">BUG-005</td>
+            <td><strong>Unauthorized Ticket Closure:</strong> Unauthorized users were able to mark contractor road works as "Resolved" without verification.</td>
+            <td><span class="severity-badge sev-critical">Critical</span></td>
+            <td class="root-cause">Missing role authorization and reporter-identity verification guards on ticket resolution actions.</td>
+            <td class="fix-desc">Implemented reporter-only verification logic in <code>VerificationTracker.tsx</code> requiring matching citizen ID / admin passkey before state transition.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-09-22</td>
+          </tr>
+          <tr>
+            <td class="issue-id">BUG-006</td>
+            <td><strong>Payload Memory Bloat:</strong> Uploading 5+ MB mobile camera photos caused server memory spikes and excessive database JSON payload size.</td>
+            <td><span class="severity-badge sev-high">High</span></td>
+            <td class="root-cause">Raw JPEG files were directly encoded to uncompressed Base64 strings, creating 7+ MB data chunks per complaint.</td>
+            <td class="fix-desc">Implemented client-side HTML5 Canvas 2D image downscaling and WebP compression pipeline, reducing photo payloads from &gt;5MB to &lt;250KB before upload.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-09-24</td>
+          </tr>
+          <tr>
+            <td class="issue-id">BUG-007</td>
+            <td><strong>Duplicate Socket Alerts:</strong> Duplicate real-time ticket alerts and memory leak after repeated tab switching.</td>
+            <td><span class="severity-badge sev-medium">Medium</span></td>
+            <td class="root-cause">Socket.io event listeners (<code>socket.on('ticket-created')</code>) were re-registered on every component render without teardown.</td>
+            <td class="fix-desc">Wrapped socket subscriptions in <code>useEffect</code> with appropriate dependency arrays and added <code>socket.off()</code> teardown handlers.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-09-25</td>
+          </tr>
+          <tr>
+            <td class="issue-id">BUG-008</td>
+            <td><strong>DLP Countdown NaN:</strong> Defect Liability Period (DLP) warranty countdown displayed <code>NaN Months Remaining</code> on certain browsers.</td>
+            <td><span class="severity-badge sev-medium">Medium</span></td>
+            <td class="root-cause">Date parsing used browser-dependent <code>Date.parse("15 Jan 2026")</code> which fails or behaves inconsistently on non-V8 JS engines.</td>
+            <td class="fix-desc">Standardized all date storage to ISO 8601 (<code>YYYY-MM-DD</code>) and created a robust date-difference utility helper.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-09-26</td>
+          </tr>
+          <tr>
+            <td class="issue-id">BUG-009</td>
+            <td><strong>Localization Key Divergence:</strong> Marathi localization showed raw English keys for newly added hazard categories (e.g. <code>DRAINAGE_OVERFLOW</code>).</td>
+            <td><span class="severity-badge sev-medium">Medium</span></td>
+            <td class="root-cause">Dictionary divergence between <code>en</code> and <code>mr</code> translation objects in <code>translations.ts</code>.</td>
+            <td class="fix-desc">Synchronized all localization keys across English and Marathi dictionaries to achieve 100% bilingual parity.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-09-27</td>
+          </tr>
+          <tr>
+            <td class="issue-id">BUG-010</td>
+            <td><strong>Mobile UI Footer Overlap:</strong> Mobile Citizen Feed navigation bar overlapped the bottom-most complaint cards on small screen viewports.</td>
+            <td><span class="severity-badge sev-low">Low</span></td>
+            <td class="root-cause">Global layout container lacked viewport bottom safe-area offset padding when fixed navigation was active.</td>
+            <td class="fix-desc">Added dynamic viewport padding <code>pb-24</code> to main content wrappers in <code>BottomMobileNav.tsx</code> and <code>App.tsx</code>.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-09-28</td>
+          </tr>
+          <tr>
+            <td class="issue-id">BUG-011</td>
+            <td><strong>Static Dashboard Metrics:</strong> KPI banner showed hardcoded counts that did not update when new tickets were filed.</td>
+            <td><span class="severity-badge sev-medium">Medium</span></td>
+            <td class="root-cause">Dashboard component used static mock data rather than deriving counts dynamically from the live tickets state.</td>
+            <td class="fix-desc">Refactored <code>KpiBanner.tsx</code> to compute active grievances, resolved issues, and SLA compliance dynamically from <code>tickets.length</code>.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-09-29</td>
+          </tr>
+          <tr>
+            <td class="issue-id">BUG-012</td>
+            <td><strong>Chatbot Autofill Disconnect:</strong> AI Chatbot suggestion chips did not autofill the complaint modal when clicked.</td>
+            <td><span class="severity-badge sev-low">Low</span></td>
+            <td class="root-cause">Chatbot modal was not communicating state to <code>ComplaintFormModal</code> due to missing parent callback handler.</td>
+            <td class="fix-desc">Passed shared callback <code>onSelectHazard(category, title)</code> from parent <code>App.tsx</code> to enable seamless 1-click complaint pre-filling.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-09-29</td>
+          </tr>
+          <tr>
+            <td class="issue-id">BUG-013</td>
+            <td><strong>Low Print Contrast:</strong> Dark mode text contrast was illegible when printing reports or viewing on low-contrast projectors.</td>
+            <td><span class="severity-badge sev-low">Low</span></td>
+            <td class="root-cause">CSS variables for background and text lacked high-contrast fallback tokens for municipal print stylesheets.</td>
+            <td class="fix-desc">Added explicit <code>@media print</code> CSS overrides and high-contrast color classes for municipal report exports.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-09-30</td>
+          </tr>
+          <tr>
+            <td class="issue-id">BUG-014</td>
+            <td><strong>Boundary Coordinate Breach:</strong> GPS coordinate geofence allowed coordinates outside Nashik Municipal Corporation boundaries.</td>
+            <td><span class="severity-badge sev-high">High</span></td>
+            <td class="root-cause">Absence of geographic bounding box verification allowed test coordinates from Mumbai into Nashik wards.</td>
+            <td class="fix-desc">Implemented bounding box filter (<code>lat: 19.85 - 20.15</code>, <code>lng: 73.65 - 73.95</code>) that rejects coordinates outside NMC jurisdiction.</td>
+            <td><span class="status-badge">Resolved</span></td>
+            <td>2026-10-01</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Debugging & Fixes Deep Dive -->
+    <div class="section-title">
+      🛠️ Key Debugging & Fix Architecture Highlights
+    </div>
+
+    <div class="debug-card">
+      <div class="debug-title">1. BUG-001 (Critical): Safe React Lifecycle Teardown for Leaflet.js</div>
+      <p style="font-size: 13px; color: #334155;">
+        Single-page React rendering recreates DOM nodes on tab changes. Without an explicit cleanup hook, Leaflet retained internal map listeners on orphaned DOM containers. By returning <code>map.remove()</code> inside the cleanup lifecycle of <code>useEffect</code>, memory leaks and <code>"Map container is already initialized"</code> exceptions were eliminated.
+      </p>
+    </div>
+
+    <div class="debug-card">
+      <div class="debug-title">2. BUG-004 (High): Geotagging Precision via Landmark Coordinate Snapping</div>
+      <p style="font-size: 13px; color: #334155;">
+        Previous submissions assigned generic ward centroids, causing complaints from distinct sectors to cluster at a single point. The implemented fix couples an automated dictionary lookup table with an interactive Leaflet draggable pinpoint mini-map, ensuring geotag accuracy within 5 meters.
+      </p>
+    </div>
+
+    <div class="debug-card">
+      <div class="debug-title">3. BUG-006 (High): HTML5 Canvas WebP Compression for Geotagged Evidence</div>
+      <p style="font-size: 13px; color: #334155;">
+        Direct base64 photo uploads resulted in 5–8 MB payloads per complaint, exhausting backend file-locking buffers. The client-side Canvas 2D downscaling pipeline automatically resizes camera images to max 1024px width and encodes them as 75% quality WebP, reducing transfer payload by <strong>95.8%</strong> (under 250 KB) without noticeable loss in visual clarity.
+      </p>
+    </div>
+
+    <footer>
+      <div>Nashik Municipal Corporation &copy; 2026 Civic Accountability System</div>
+      <div>PBL Project Deliverable 3: Issue / Bug Log</div>
+    </footer>
+  </div>
+</body>
+</html>

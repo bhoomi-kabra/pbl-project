@@ -85,6 +85,24 @@ export async function submitCommentToDatabase(ticketId: string, userName: string
 }
 
 /**
+ * Flag complaint as false or misleading report
+ */
+export async function submitFlagFalseToDatabase(ticketId: string, reason: string, reporterName?: string): Promise<any> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/flag-false`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason, reporterName }),
+    });
+    if (!response.ok) throw new Error('Flag false API failed');
+    return await response.json();
+  } catch (error) {
+    console.warn('Flag false API offline:', error);
+    return null;
+  }
+}
+
+/**
  * Admin resolve ticket with proof photo & notes
  */
 export async function resolveTicketInDatabase(ticketId: string, proofPhotoUrl: string, resolutionNotes?: string): Promise<any> {

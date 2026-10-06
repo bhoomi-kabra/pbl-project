@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { CivicTicket, Language, WardName, ThemeMode } from '../types';
 import { translations } from '../data/translations';
 import { UserAccount } from '../services/api';
-import { CheckCircle, XCircle, AlertTriangle, ShieldCheck, User, Building, MapPin, Eye, Award, Lock } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, ShieldCheck, User, Building, MapPin, Eye, Award, Lock, Clock } from 'lucide-react';
 
 interface VerificationTrackerProps {
   tickets: CivicTicket[];
   language: Language;
   selectedWard: WardName;
-  theme: ThemeMode;
+  theme?: ThemeMode;
   currentUser?: UserAccount | null;
   onUpdateTicketVote: (ticketId: string, action: 'confirm' | 'reopen') => void;
 }
@@ -17,15 +17,12 @@ export const VerificationTracker: React.FC<VerificationTrackerProps> = ({
   tickets,
   language,
   selectedWard,
-  theme,
   currentUser,
   onUpdateTicketVote,
 }) => {
   const t = translations[language];
   const [activeTicketId, setActiveTicketId] = useState<string>(tickets[0]?.id || '');
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-
-  const isDark = theme === 'dark';
 
   const filteredTickets = tickets.filter(
     (t) => selectedWard === 'All Wards' || t.ward === selectedWard
@@ -47,9 +44,9 @@ export const VerificationTracker: React.FC<VerificationTrackerProps> = ({
     if (!currentTicket) return;
 
     if (!isOriginalReporter) {
-      const reporterDisplay = currentTicket.reporterName || 'the original reporter';
+      const reporterDisplay = currentTicket.reporterName || 'the original citizen reporter';
       setNotification({
-        message: `🔒 Access Denied: Only ${reporterDisplay} (who reported this defect) can perform citizen verification & close this ticket.`,
+        message: `🔒 Access Restricted: Only ${reporterDisplay} (who filed this complaint) can perform final citizen verification and close this ticket.`,
         type: 'error',
       });
       setTimeout(() => setNotification(null), 5000);
@@ -58,36 +55,31 @@ export const VerificationTracker: React.FC<VerificationTrackerProps> = ({
 
     onUpdateTicketVote(currentTicket.id, action);
 
-    if (action === 'confirm') {
-      setNotification({
-        message: t.confirmedSuccess,
-        type: 'success',
-      });
-    } else {
-      setNotification({
-        message: t.escalatedWarning,
-        type: 'error',
-      });
-    }
-
+    setNotification({
+      message:
+        action === 'confirm'
+          ? '✓ Verification confirmed! Ticket marked officially RESOLVED.'
+          : '⚠️ Ticket reopened and escalated to NMC Executive Engineer.',
+      type: 'success',
+    });
     setTimeout(() => {
       setNotification(null);
     }, 5000);
   };
 
   return (
-    <section className={`${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'} py-8 px-4 border-b transition-colors duration-300`}>
+    <section className="bg-slate-50 border-b border-slate-200 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20">
-              <ShieldCheck className="w-6 h-6" />
+            <div className="p-2.5 bg-emerald-100 text-emerald-800 rounded-2xl border border-emerald-200">
+              <ShieldCheck className="w-6 h-6 text-emerald-600" />
             </div>
             <div>
-              <h3 className={`text-xl md:text-2xl font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">
                 {t.verificationTitle}
               </h3>
-              <p className={`text-xs md:text-sm mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+              <p className="text-xs md:text-sm text-slate-500 font-medium mt-0.5">
                 {t.verificationSub}
               </p>
             </div>
@@ -96,215 +88,192 @@ export const VerificationTracker: React.FC<VerificationTrackerProps> = ({
 
         {notification && (
           <div
-            className={`mb-6 p-4 rounded-2xl border flex items-center justify-between text-xs font-semibold animate-in fade-in duration-200 ${
+            className={`mb-6 p-4 rounded-2xl border flex items-center justify-between text-xs font-bold animate-in fade-in duration-200 shadow-sm ${
               notification.type === 'success'
-                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/40'
-                : 'bg-red-500/10 text-red-600 border-red-500/40'
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : 'bg-rose-50 text-rose-800 border-rose-200'
             }`}
           >
             <div className="flex items-center gap-2">
               {notification.type === 'success' ? (
-                <CheckCircle className="w-5 h-5 text-emerald-500" />
+                <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
               ) : (
-                <AlertTriangle className="w-5 h-5 text-red-500 animate-bounce" />
+                <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
               )}
               <span>{notification.message}</span>
             </div>
             {notification.type === 'success' && (
-              <span className={`flex items-center gap-1 text-amber-500 font-bold px-2.5 py-1 rounded-lg border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-300 shadow-sm'}`}>
-                <Award className="w-4 h-4" /> +50 Civic Score
+              <span className="flex items-center gap-1 text-amber-700 bg-amber-50 font-bold px-2.5 py-1 rounded-lg border border-amber-200 shrink-0">
+                <Award className="w-4 h-4 text-amber-600" /> +50 Civic Score
               </span>
             )}
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left: Ticket Selector */}
           <div className="space-y-3">
-            <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Select Ticket Needing Citizen Audit ({filteredTickets.length})
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Select Ticket for Citizen Audit ({filteredTickets.length})
             </h4>
 
-            {filteredTickets.map((ticket) => {
-              const isSelected = ticket.id === (currentTicket?.id || '');
-              return (
-                <div
-                  key={ticket.id}
-                  onClick={() => setActiveTicketId(ticket.id)}
-                  className={`p-4 rounded-2xl border transition cursor-pointer ${
-                    isSelected
-                      ? isDark
-                        ? 'bg-slate-900 border-emerald-500 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500/50'
-                        : 'bg-white border-emerald-500 shadow-md ring-2 ring-emerald-500/30'
-                      : isDark
-                        ? 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+            {filteredTickets.length === 0 ? (
+              <div className="p-6 rounded-2xl border border-slate-200 bg-white text-center text-xs text-slate-500">
+                No tickets to display in {selectedWard}.
+              </div>
+            ) : (
+              filteredTickets.map((ticket) => {
+                const isSelected = ticket.id === (currentTicket?.id || '');
+                return (
+                  <div
+                    key={ticket.id}
+                    onClick={() => setActiveTicketId(ticket.id)}
+                    className={`p-4 rounded-2xl border transition cursor-pointer ${
+                      isSelected
+                        ? 'bg-white border-emerald-500 shadow-md ring-2 ring-emerald-500/20'
                         : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm'
-                  }`}
-                >
-                  <div className="flex items-center justify-between text-xs font-mono mb-1">
-                    <span className="text-emerald-500 font-bold">{ticket.ticketNumber}</span>
-                    <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{ticket.submittedDate}</span>
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-xs font-mono mb-1">
+                      <span className="text-emerald-700 font-extrabold">{ticket.ticketNumber}</span>
+                      <span className="text-slate-400 font-medium">{ticket.submittedDate}</span>
+                    </div>
+
+                    <h5 className="text-sm font-extrabold text-slate-900 line-clamp-1">
+                      {language === 'mr' ? ticket.titleMr : ticket.title}
+                    </h5>
+
+                    <p className="text-xs flex items-center gap-1 mt-1 text-slate-500 font-medium truncate">
+                      <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                      {ticket.ward} • {ticket.location}
+                    </p>
+
+                    <div className="mt-3 flex items-center justify-between text-[11px]">
+                      <span className="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-800 font-bold border border-amber-200">
+                        {ticket.status}
+                      </span>
+                      <span className="text-slate-600 font-semibold">
+                        👍 {ticket.citizenVotesConfirmed} Confirmed
+                      </span>
+                    </div>
                   </div>
-
-                  <h5 className={`text-sm font-bold line-clamp-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    {language === 'mr' ? ticket.titleMr : ticket.title}
-                  </h5>
-
-                  <p className={`text-xs flex items-center gap-1 mt-1 truncate ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                    <MapPin className="w-3 h-3 text-emerald-500" />
-                    {ticket.ward} • {ticket.location}
-                  </p>
-
-                  <div className="mt-3 flex items-center justify-between text-[11px]">
-                    <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 font-medium border border-amber-500/20">
-                      Audit Pending
-                    </span>
-                    <span className={isDark ? 'text-slate-400 font-medium' : 'text-slate-600 font-medium'}>
-                      👍 {ticket.citizenVotesConfirmed} Confirmed
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
 
+          {/* Right: Before vs After Side-by-Side Verification */}
           {currentTicket ? (
-            <div className={`border rounded-3xl p-6 space-y-6 shadow-xl ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-              <div className="flex flex-wrap justify-between items-start border-b border-slate-700/50 pb-4 gap-4">
+            <div className="lg:col-span-2 border border-slate-200 rounded-3xl p-6 space-y-6 shadow-sm bg-white text-slate-900">
+              <div className="flex flex-wrap justify-between items-start border-b border-slate-200 pb-4 gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono text-emerald-500 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                    <span className="text-xs font-mono text-emerald-800 font-extrabold bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
                       {currentTicket.ticketNumber}
                     </span>
-                    <span className={`text-xs font-semibold uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    <span className="text-xs font-bold uppercase text-slate-500">
                       {currentTicket.hazardType}
                     </span>
                   </div>
-                  <h4 className={`text-lg md:text-xl font-extrabold mt-1.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  <h4 className="text-lg font-black text-slate-900 mt-2">
                     {language === 'mr' ? currentTicket.titleMr : currentTicket.title}
                   </h4>
-                  <p className={`text-xs flex items-center gap-1 mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                    <MapPin className="w-3.5 h-3.5 text-emerald-500" />
+                  <p className="text-xs text-slate-600 font-medium mt-0.5 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-emerald-600" />
                     {currentTicket.location} ({currentTicket.ward} Ward)
                   </p>
                 </div>
 
-                <div className="text-right text-xs space-y-1">
-                  <div className="flex items-center gap-1 justify-end">
-                    <User className="w-3.5 h-3.5 text-blue-500" />
-                    <span className={`font-semibold ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{currentTicket.assignedEngineer}</span>
-                  </div>
-                  <div className={`flex items-center gap-1 justify-end ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                    <Building className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Contractor: {currentTicket.contractorAgency}</span>
-                  </div>
+                <div className="text-right">
+                  <span className="text-xs font-bold px-3 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-200">
+                    Status: {currentTicket.status}
+                  </span>
+                  <p className="text-[11px] text-slate-500 mt-1">Submitted: {currentTicket.submittedDate}</p>
                 </div>
               </div>
 
-              <div>
-                <label className={`text-xs font-bold uppercase tracking-wider mb-3 block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Official NMC Resolution Lifecycle Flow
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-[11px]">
-                  <div className="bg-emerald-500/10 border border-emerald-500/40 text-emerald-500 p-2 rounded-xl font-semibold">
-                    ✓ 1. Submitted
+              {/* Side-by-Side Photographic Audit Evidence */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Before Repair Photo */}
+                <div className="border border-slate-200 rounded-2xl p-3 bg-slate-50 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-rose-700">
+                    <span>1. Before Repair (Reported by Citizen)</span>
+                    <span className="text-[10px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-mono">Geotagged</span>
                   </div>
-                  <div className="bg-emerald-500/10 border border-emerald-500/40 text-emerald-500 p-2 rounded-xl font-semibold">
-                    ✓ 2. Assigned
-                  </div>
-                  <div className="bg-emerald-500/10 border border-emerald-500/40 text-emerald-500 p-2 rounded-xl font-semibold">
-                    ✓ 3. In Progress
-                  </div>
-                  <div className="bg-emerald-500/10 border border-emerald-500/40 text-emerald-500 p-2 rounded-xl font-semibold">
-                    ✓ 4. Evidence Uploaded
-                  </div>
-                  <div className="bg-amber-500/20 border border-amber-500/50 text-amber-600 p-2 rounded-xl font-bold animate-pulse">
-                    ⏳ 5. Citizen Verification
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className={`text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  <Eye className="w-4 h-4 text-emerald-500" />
-                  Side-by-Side Verification Evidence (Geotag & Timestamp Audited)
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <div className="text-xs font-semibold text-red-500 flex items-center justify-between">
-                      <span>{t.beforeRepair}</span>
-                      <span className="font-mono text-[10px] text-slate-400">{currentTicket.submittedDate}</span>
-                    </div>
-                    <div className="relative h-44 rounded-2xl overflow-hidden border border-slate-700 group">
+                  <div className="h-48 rounded-xl overflow-hidden border border-slate-200 bg-slate-200">
+                    {currentTicket.beforePhoto ? (
                       <img
                         src={currentTicket.beforePhoto}
                         alt="Before Repair"
-                        className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                        className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-2 left-2 bg-red-600 text-white font-bold text-[10px] px-2 py-0.5 rounded">
-                        BEFORE
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-xs text-slate-400">
+                        No initial photo provided
                       </div>
-                    </div>
+                    )}
                   </div>
+                </div>
 
-                  <div className="space-y-1.5">
-                    <div className="text-xs font-semibold text-emerald-500 flex items-center justify-between">
-                      <span>{t.afterRepair}</span>
-                      <span className="font-mono text-[10px] text-slate-400">10 Aug 2026</span>
-                    </div>
-                    <div className="relative h-44 rounded-2xl overflow-hidden border border-emerald-500/50 group shadow-lg">
+                {/* After Repair Photo */}
+                <div className="border border-slate-200 rounded-2xl p-3 bg-slate-50 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-emerald-700">
+                    <span>2. After Repair (Municipal Contractor Proof)</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono">Official Proof</span>
+                  </div>
+                  <div className="h-48 rounded-xl overflow-hidden border border-slate-200 bg-slate-200">
+                    {currentTicket.afterPhoto ? (
                       <img
-                        src={currentTicket.afterPhoto || currentTicket.beforePhoto}
+                        src={currentTicket.afterPhoto}
                         alt="After Repair"
-                        className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                        className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-2 left-2 bg-emerald-600 text-white font-bold text-[10px] px-2 py-0.5 rounded">
-                        AFTER (Geotag Verified)
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center text-xs text-slate-500 p-4 text-center">
+                        <Clock className="w-8 h-8 text-slate-400 mb-2 animate-pulse" />
+                        <span className="font-bold">Work In Progress / Awaiting Proof</span>
+                        <span className="text-[10px] text-slate-400 mt-1">Contractor has not yet uploaded completion photo</span>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-700/50">
-                {!isOriginalReporter ? (
-                  <div className="mb-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>
-                      <strong>Reporter Authorization Lock:</strong> Only <strong>{currentTicket.reporterName || 'the original citizen reporter'}</strong> who logged this defect can audit and close this ticket.
-                      {!currentUser && ' Please sign in with your reporter account.'}
-                    </span>
+              {/* Citizen Verification Action Buttons */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-700">
+                    <User className="w-4 h-4 text-emerald-600" />
+                    <span>Citizen Audit Authority: {currentTicket.reporterName || 'Registered Reporter'}</span>
                   </div>
-                ) : (
-                  <p className={`text-xs font-semibold mb-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                    ✓ <strong>Original Reporter Verified:</strong> You filed this complaint. Please verify if the contractor properly resolved this defect at the site:
-                  </p>
-                )}
+                  {!isOriginalReporter && (
+                    <span className="text-[11px] text-slate-500 font-medium flex items-center gap-1">
+                      <Lock className="w-3.5 h-3.5" /> Reporter-Only Signoff
+                    </span>
+                  )}
+                </div>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap items-center gap-3 pt-1">
                   <button
                     onClick={() => handleVote('confirm')}
                     disabled={!isOriginalReporter}
-                    className={`flex-1 min-w-[200px] py-3 px-4 rounded-2xl font-bold text-xs md:text-sm flex items-center justify-center gap-2 transition transform active:scale-95 shadow-lg ${
+                    className={`flex-1 min-w-[200px] py-3 px-4 rounded-2xl font-bold text-xs md:text-sm flex items-center justify-center gap-2 transition transform active:scale-95 shadow-sm ${
                       !isOriginalReporter
-                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-60 border border-slate-700'
-                        : currentTicket.userVerificationState === 'confirmed'
-                        ? 'bg-emerald-600 text-white border-2 border-emerald-400'
-                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white'
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
                     }`}
                   >
                     <CheckCircle className="w-5 h-5" />
-                    <span>{t.confirmFixed} ({currentTicket.citizenVotesConfirmed})</span>
+                    <span>{t.confirmResolved} ({currentTicket.citizenVotesConfirmed})</span>
                   </button>
 
                   <button
                     onClick={() => handleVote('reopen')}
                     disabled={!isOriginalReporter}
-                    className={`flex-1 min-w-[200px] py-3 px-4 rounded-2xl font-bold text-xs md:text-sm flex items-center justify-center gap-2 transition transform active:scale-95 shadow-lg ${
+                    className={`flex-1 min-w-[200px] py-3 px-4 rounded-2xl font-bold text-xs md:text-sm flex items-center justify-center gap-2 transition transform active:scale-95 shadow-sm ${
                       !isOriginalReporter
-                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-60 border border-slate-700'
-                        : currentTicket.userVerificationState === 'reopened'
-                        ? 'bg-red-600 text-white border-2 border-red-400'
-                        : 'bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white'
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                        : 'bg-rose-600 hover:bg-rose-700 text-white'
                     }`}
                   >
                     <XCircle className="w-5 h-5" />
@@ -314,7 +283,7 @@ export const VerificationTracker: React.FC<VerificationTrackerProps> = ({
               </div>
             </div>
           ) : (
-            <div className={`lg:col-span-2 border rounded-3xl p-8 flex items-center justify-center text-slate-500 text-sm ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <div className="lg:col-span-2 border border-slate-200 rounded-3xl p-8 flex items-center justify-center text-slate-500 text-sm bg-white">
               No tickets requiring verification in this ward.
             </div>
           )}

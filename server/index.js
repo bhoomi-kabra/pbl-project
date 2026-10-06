@@ -23,102 +23,8 @@ app.use(express.json({ limit: '20mb' }));
 
 const DB_FILE = path.join(__dirname, 'db_data.json');
 
-// Initial seed tickets
-const initialTickets = [
-  {
-    id: 't-101',
-    ticketNumber: 'NMC-2026-4821',
-    title: 'Severe Road Collapse & Deep Cave-In',
-    titleMr: 'रस्त्यावर मोठा खड्डा आणि रस्ता खचला',
-    hazardType: 'ROAD_COLLAPSE',
-    ward: 'Panchavati',
-    location: 'Gangapur Road, Near K.K. Wagh Circle',
-    coordinates: [20.0180, 73.8180],
-    status: 'VERIFICATION_PENDING',
-    submittedDate: '2 hours ago',
-    assignedEngineer: 'Er. M. S. Patil',
-    contractorAgency: 'NMC Infra Cell',
-    department: 'PWD_ROADS',
-    dlpExpiryDate: '24 Months DLP',
-    beforePhoto: 'https://images.unsplash.com/photo-1544725121-be3bf52e2dc8?w=600&auto=format&fit=crop&q=80',
-    videoUrl: '',
-    aiConfidence: 96,
-    plusOneCount: 38,
-    impactScore: 195,
-    riskLevel: 'CRITICAL',
-    citizenVotesConfirmed: 14,
-    citizenVotesReopened: 1,
-    userVerificationState: 'none',
-    reporterName: 'Aarav Deshmukh',
-    reporterMobile: '9823011223',
-    comments: [
-      { id: 'c-1', userName: 'Rohit Shinde', userRole: 'CITIZEN', text: 'Facing huge traffic jam here every evening!', timestamp: '1 hour ago' },
-      { id: 'c-2', userName: 'Sonal Kulkarni', userRole: 'CITIZEN', text: 'Extremely dangerous for two-wheelers at night.', timestamp: '30 mins ago' }
-    ]
-  },
-  {
-    id: 't-102',
-    ticketNumber: 'NMC-2026-9104',
-    title: 'Burst Water Pipeline & Submersion Hazard',
-    titleMr: 'पाणी पाईपलाईन गळती धोका',
-    hazardType: 'WATER_LEAKAGE',
-    ward: 'Nashik West',
-    location: 'College Road, Opp Bhonsala Circle',
-    coordinates: [20.0050, 73.7620],
-    status: 'IN_PROGRESS',
-    submittedDate: '5 hours ago',
-    assignedEngineer: 'Er. R. V. Joshi',
-    contractorAgency: 'Nashik Jal Nigam',
-    department: 'WATER_SUPPLY',
-    dlpExpiryDate: '12 Months DLP',
-    beforePhoto: 'https://images.unsplash.com/photo-1574482620826-406856a73c3d?w=600&auto=format&fit=crop&q=80',
-    videoUrl: '',
-    aiConfidence: 92,
-    plusOneCount: 29,
-    impactScore: 145,
-    riskLevel: 'HIGH',
-    citizenVotesConfirmed: 8,
-    citizenVotesReopened: 0,
-    userVerificationState: 'none',
-    reporterName: 'Priya Joshi',
-    reporterMobile: '9890123456',
-    comments: [
-      { id: 'c-3', userName: 'Vikas Patil', userRole: 'CITIZEN', text: 'Clean drinking water is wasting continuously!', timestamp: '2 hours ago' }
-    ]
-  },
-  {
-    id: 't-103',
-    ticketNumber: 'NMC-2026-3392',
-    title: 'Hanging High Voltage Electric Wire',
-    titleMr: 'विजेची उघडी तार रस्ता धोका',
-    hazardType: 'ELECTRICAL_HAZARD',
-    ward: 'Cidco',
-    location: 'Trimurti Chowk Avenue, Cidco Sector 4',
-    coordinates: [19.9690, 73.7620],
-    status: 'EVIDENCE_UPLOADED',
-    submittedDate: '1 day ago',
-    assignedEngineer: 'Er. A. B. Pawar',
-    contractorAgency: 'MSEDCL Nashik Electrical',
-    department: 'MSEDCL_ELECTRICAL',
-    dlpExpiryDate: '36 Months DLP',
-    beforePhoto: 'https://images.unsplash.com/photo-1517649763962-0c623266010b?w=600&auto=format&fit=crop&q=80',
-    afterPhoto: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&auto=format&fit=crop&q=80',
-    videoUrl: '',
-    aiConfidence: 98,
-    plusOneCount: 45,
-    impactScore: 230,
-    riskLevel: 'CRITICAL',
-    autoVanishDaysLeft: 12,
-    citizenVotesConfirmed: 22,
-    citizenVotesReopened: 2,
-    userVerificationState: 'none',
-    reporterName: 'Kiran Wagh',
-    reporterMobile: '9765432109',
-    comments: [
-      { id: 'c-4', userName: 'MSEDCL Engineer', userRole: 'ADMIN', text: 'Power isolated and wire re-anchored safely.', timestamp: '4 hours ago' }
-    ]
-  }
-];
+// Initial seed tickets (empty for clean user-driven complaints)
+const initialTickets = [];
 
 const initialProjects = [
   {
@@ -194,6 +100,7 @@ let db = loadDatabase();
 
 // GET /api/tickets - Fetch all tickets
 app.get('/api/tickets', (req, res) => {
+  db = loadDatabase();
   res.json(db.tickets);
 });
 
@@ -209,18 +116,19 @@ app.post('/api/complaints', (req, res) => {
     ward: body.ward || 'Panchavati',
     location: body.location || 'Nashik City',
     coordinates: body.coordinates || [20.0050, 73.7800],
-    status: 'VERIFICATION_PENDING',
-    submittedDate: 'Just Now',
-    assignedEngineer: 'Er. M. S. Patil',
-    contractorAgency: 'NMC Smart Rapid Cell',
+    status: body.status || 'SUBMITTED',
+    submittedDate: body.submittedDate || 'Just Now',
+    assignedEngineer: body.assignedEngineer || `Er. Ward Engineer (${body.ward || 'Panchavati'})`,
+    contractorAgency: body.contractorAgency || 'NMC Rapid Response Cell',
     department: body.department || 'PWD_ROADS',
-    dlpExpiryDate: '36 Months DLP',
-    beforePhoto: body.beforePhoto || 'https://images.unsplash.com/photo-1544725121-be3bf52e2dc8?w=600&auto=format&fit=crop&q=80',
+    dlpExpiryDate: body.dlpExpiryDate || '24 Months DLP',
+    beforePhoto: body.beforePhoto || '',
+    afterPhoto: body.afterPhoto || '',
     videoUrl: body.videoUrl || '',
     aiConfidence: body.aiConfidence || 95,
     plusOneCount: body.plusOneCount || 1,
-    impactScore: body.impactScore || 10,
-    riskLevel: body.riskLevel || 'LOW',
+    impactScore: body.impactScore || 20,
+    riskLevel: body.riskLevel || 'MEDIUM',
     citizenVotesConfirmed: 0,
     citizenVotesReopened: 0,
     userVerificationState: 'none',
@@ -290,6 +198,36 @@ app.post('/api/tickets/:id/comments', (req, res) => {
 
   console.log(`💬 New comment added in backend DB for ticket ${id}`);
   res.json(newComment);
+});
+
+// POST /api/tickets/:id/flag-false - Community report as false / misleading
+app.post('/api/tickets/:id/flag-false', (req, res) => {
+  const { id } = req.params;
+  const { reason, reporterName } = req.body;
+
+  const ticket = db.tickets.find((t) => t.id === id);
+  if (!ticket) {
+    return res.status(404).json({ error: 'Ticket not found' });
+  }
+
+  ticket.falseReportFlags = (ticket.falseReportFlags || 0) + 1;
+  if (!ticket.falseReportReasons) ticket.falseReportReasons = [];
+  ticket.falseReportReasons.push({
+    reason: reason || 'SUSPECTED_FALSE_REPORT',
+    reporter: reporterName || 'Anonymous Citizen',
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  });
+
+  // If 2 or more citizens flag this report, mark for verification review
+  if (ticket.falseReportFlags >= 2) {
+    ticket.isSuspectedFalse = true;
+  }
+
+  saveDatabase(db);
+  io.emit('ticket_updated', ticket);
+
+  console.log(`🚩 False report flag logged in backend DB for ticket ${id} (Total flags: ${ticket.falseReportFlags})`);
+  res.json(ticket);
 });
 
 // PATCH /api/tickets/:id/resolve - Admin resolve with proof photo

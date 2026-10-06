@@ -1,7 +1,7 @@
 import React from 'react';
 import { WardName, Language, ThemeMode, UserRoleMode } from '../types';
 import { translations } from '../data/translations';
-import { ShieldCheck, MapPin, Globe, AlertTriangle, Building2, Sparkles, Sun, Moon, LayoutDashboard, Share2, Users, Map, User, Shield, LogIn, LogOut } from 'lucide-react';
+import { ShieldCheck, MapPin, Globe, AlertTriangle, Building2, Sparkles, LayoutDashboard, Share2, Users, Map, User, Shield, LogIn, LogOut } from 'lucide-react';
 import { UserAccount } from '../services/api';
 
 export type AppViewMode = 'GIS_MAP' | 'ADMIN_DASHBOARD' | 'SOCIAL_FEED' | 'COMMUNITY_RESOLVE';
@@ -11,8 +11,8 @@ interface HeaderProps {
   onSelectWard: (ward: WardName) => void;
   language: Language;
   onToggleLanguage: () => void;
-  theme: ThemeMode;
-  onToggleTheme: () => void;
+  theme?: ThemeMode;
+  onToggleTheme?: () => void;
   onOpenReportModal: () => void;
   activeView: AppViewMode;
   onChangeView: (view: AppViewMode) => void;
@@ -27,8 +27,6 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectWard,
   language,
   onToggleLanguage,
-  theme,
-  onToggleTheme,
   onOpenReportModal,
   activeView,
   onChangeView,
@@ -38,7 +36,6 @@ export const Header: React.FC<HeaderProps> = ({
   onSignOut,
 }) => {
   const t = translations[language];
-  const isDark = theme === 'dark';
   const isAdmin = userRole === 'ADMIN';
 
   const wards: WardName[] = [
@@ -52,47 +49,44 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className={`${isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900 shadow-md'} border-b sticky top-0 z-40 transition-colors duration-300`}>
-      {/* Top Banner Bar */}
-      <div className={`px-3 sm:px-4 py-1.5 border-b text-xs flex justify-between items-center transition-colors duration-300 ${
-        isDark 
-          ? 'bg-slate-950 border-slate-800 text-slate-300' 
-          : 'bg-slate-100 border-slate-200 text-slate-700'
-      }`}>
+    <header className="bg-white border-b border-slate-200 text-slate-900 sticky top-0 z-40 shadow-sm transition-colors duration-200">
+      
+      {/* Top Municipal Status Bar */}
+      <div className="px-3 sm:px-6 py-2 border-b border-slate-200 text-xs flex justify-between items-center bg-slate-50 text-slate-700">
         <div className="flex items-center gap-2 overflow-hidden">
-          <span className="flex h-2 w-2 relative shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          <span className="flex h-2.5 w-2.5 relative shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
           </span>
-          <span className={`font-bold tracking-wide flex items-center gap-1 truncate ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
-            <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden sm:inline">{t.smartCityBadge}</span>
-            <span className="sm:hidden">Nashik Smart Portal</span>
+          <span className="font-extrabold tracking-wide flex items-center gap-1.5 text-emerald-800 truncate">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="hidden sm:inline">Nashik Municipal Corporation • Official Civic Portal</span>
+            <span className="sm:hidden">NMC Civic Portal</span>
           </span>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {/* User Account Profile / Auth Button */}
+          {/* User Account / Auth Button */}
           {currentUser ? (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <button
                 onClick={onOpenAuthModal}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-bold transition shadow-sm ${
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold transition shadow-sm ${
                   isAdmin
-                    ? 'bg-indigo-600/20 text-indigo-400 border-indigo-500/40'
-                    : 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40'
+                    ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                 }`}
                 title="Account Settings"
               >
                 {isAdmin ? <Shield className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-                <span className="max-w-[110px] truncate">{currentUser.name}</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full font-black uppercase bg-white/10">
+                <span className="max-w-[120px] truncate">{currentUser.name}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase bg-slate-200 text-slate-800">
                   {currentUser.role}
                 </span>
               </button>
               <button
                 onClick={onSignOut}
-                className="p-1 rounded-full text-slate-400 hover:text-red-400 transition"
+                className="p-1 rounded-full text-slate-400 hover:text-red-600 transition"
                 title="Sign Out"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -101,63 +95,38 @@ export const Header: React.FC<HeaderProps> = ({
           ) : (
             <button
               onClick={onOpenAuthModal}
-              className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-md transition"
+              className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-sm transition"
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>Sign In / Register</span>
             </button>
           )}
 
-          {/* Theme Toggle Button */}
-          <button
-            onClick={onToggleTheme}
-            className={`p-1.5 rounded-full border transition text-xs font-bold shadow-sm ${
-              isDark
-                ? 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-slate-700'
-                : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
-            }`}
-            title="Toggle Light/Dark Theme"
-          >
-            {isDark ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-600" />}
-          </button>
-
-          {/* Language Toggle Button */}
+          {/* Bilingual Language Toggle */}
           <button
             onClick={onToggleLanguage}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-full border transition text-xs font-semibold ${
-              isDark
-                ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
-                : 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300 shadow-sm'
-            }`}
+            className="flex items-center gap-1 px-3 py-1 rounded-full border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold shadow-sm transition"
           >
-            <Globe className={`w-3.5 h-3.5 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
+            <Globe className="w-3.5 h-3.5 text-emerald-600" />
             <span>{language === 'en' ? 'मराठी' : 'EN'}</span>
           </button>
         </div>
       </div>
 
       {/* Main Header Container */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 flex flex-wrap justify-between items-center gap-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
         {/* Brand & Logo */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-emerald-500 via-teal-600 to-blue-700 p-0.5 shadow-lg flex items-center justify-center shrink-0">
-            <div className={`w-full h-full rounded-[10px] flex items-center justify-center font-bold ${
-              isDark ? 'bg-slate-950 text-emerald-400' : 'bg-white text-emerald-600'
-            }`}>
-              <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-emerald-600 text-white shadow-md flex items-center justify-center shrink-0">
+            <Building2 className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className={`text-base sm:text-xl md:text-2xl font-extrabold tracking-tight ${
-                isDark ? 'text-white' : 'text-slate-900'
-              }`}>
+              <h1 className="text-base sm:text-xl font-black tracking-tight text-slate-900">
                 {t.title}
               </h1>
             </div>
-            <p className={`text-[10px] sm:text-xs font-semibold flex items-center gap-1 ${
-              isDark ? 'text-emerald-400' : 'text-emerald-700'
-            }`}>
+            <p className="text-[11px] sm:text-xs font-semibold text-emerald-700 flex items-center gap-1">
               <Sparkles className="w-3 h-3" />
               "{t.tagline}"
             </p>
@@ -165,109 +134,89 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Ward Selector & Action Button */}
-        <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
+        <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
           {/* Ward Selector Dropdown */}
-          <div className="relative flex items-center flex-1 sm:flex-initial min-w-[140px]">
-            <MapPin className={`w-3.5 h-3.5 absolute left-2.5 pointer-events-none ${
-              isDark ? 'text-emerald-400' : 'text-emerald-600'
-            }`} />
+          <div className="relative flex items-center flex-1 sm:flex-initial min-w-[160px]">
+            <MapPin className="w-4 h-4 text-emerald-600 absolute left-3 pointer-events-none" />
             <select
               value={selectedWard}
               onChange={(e) => onSelectWard(e.target.value as WardName)}
-              className={`w-full text-xs rounded-xl pl-8 pr-6 py-2 border focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none font-bold cursor-pointer transition shadow-sm ${
-                isDark
-                  ? 'bg-slate-800 text-white border-slate-700 hover:bg-slate-750'
-                  : 'bg-slate-50 text-slate-900 border-slate-300 hover:bg-white'
-              }`}
+              className="w-full text-xs rounded-xl pl-9 pr-7 py-2.5 bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 appearance-none cursor-pointer transition shadow-sm"
             >
               {wards.map((ward) => (
-                <option 
-                  key={ward} 
-                  value={ward} 
-                  className={isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}
-                >
+                <option key={ward} value={ward}>
                   {ward === 'All Wards' ? t.allWards : ward}
                 </option>
               ))}
             </select>
-            <div className="absolute right-2 pointer-events-none text-[10px] opacity-60">▼</div>
+            <div className="absolute right-2.5 pointer-events-none text-[10px] text-slate-500">▼</div>
           </div>
 
-          {/* Action Button: Report Hazard */}
+          {/* Action Button: Report Road Hazard */}
           <button
             onClick={onOpenReportModal}
-            className="bg-gradient-to-r from-red-600 via-red-500 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-lg shadow-red-500/25 flex items-center gap-1.5 transition transform active:scale-95 border border-red-400/30 shrink-0"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-2 transition transform active:scale-95 shrink-0"
           >
-            <AlertTriangle className="w-3.5 h-3.5 animate-bounce" />
+            <AlertTriangle className="w-4 h-4" />
             <span>{t.reportHazard}</span>
           </button>
         </div>
       </div>
 
       {/* Navigation View Tabs Bar (Desktop) */}
-      <div className={`hidden md:flex px-4 py-2 border-t items-center justify-start gap-2 overflow-x-auto text-xs font-bold ${
-        isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-100 border-slate-200'
-      }`}>
+      <div className="hidden md:flex px-6 py-2 border-t border-slate-200 items-center justify-start gap-2 bg-slate-50 text-xs font-bold">
         <div className="max-w-7xl mx-auto flex items-center gap-2 w-full">
           {/* Citizen Live Feed Tab */}
           <button
             onClick={() => onChangeView('SOCIAL_FEED')}
-            className={`px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition ${
+            className={`px-4 py-2 rounded-xl flex items-center gap-2 transition ${
               activeView === 'SOCIAL_FEED'
-                ? 'bg-pink-600 text-white shadow-md'
-                : isDark
-                ? 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-emerald-600 text-white shadow-sm'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
             }`}
           >
-            <Share2 className="w-4 h-4 text-pink-400" />
-            <span>Citizen Live Feed</span>
+            <Share2 className="w-4 h-4" />
+            <span>Citizen Grievance Feed</span>
           </button>
 
           {/* Ward GIS Map Tab */}
           <button
             onClick={() => onChangeView('GIS_MAP')}
-            className={`px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition ${
+            className={`px-4 py-2 rounded-xl flex items-center gap-2 transition ${
               activeView === 'GIS_MAP'
-                ? 'bg-emerald-500 text-white shadow-md'
-                : isDark
-                ? 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-emerald-600 text-white shadow-sm'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
             }`}
           >
             <Map className="w-4 h-4" />
-            <span>Ward GIS Map (+1 Pins)</span>
+            <span>Interactive GIS Map & Verification</span>
           </button>
 
           {/* Public Self-Resolution Tab */}
           <button
             onClick={() => onChangeView('COMMUNITY_RESOLVE')}
-            className={`px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition ${
+            className={`px-4 py-2 rounded-xl flex items-center gap-2 transition ${
               activeView === 'COMMUNITY_RESOLVE'
-                ? 'bg-cyan-600 text-white shadow-md'
-                : isDark
-                ? 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-emerald-600 text-white shadow-sm'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
             }`}
           >
-            <Users className="w-4 h-4 text-cyan-400" />
-            <span>Public Self-Resolution</span>
+            <Users className="w-4 h-4" />
+            <span>Citizen Self-Help Community</span>
           </button>
 
-          {/* Municipal Admin Tab (ONLY visible if logged in as ADMIN) */}
+          {/* Municipal Admin Tab (Visible if logged in as ADMIN) */}
           {isAdmin && (
             <button
               onClick={() => onChangeView('ADMIN_DASHBOARD')}
-              className={`px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition ${
+              className={`px-4 py-2 rounded-xl flex items-center gap-2 transition ${
                 activeView === 'ADMIN_DASHBOARD'
-                  ? 'bg-indigo-600 text-white shadow-md'
-                  : isDark
-                  ? 'text-slate-400 hover:text-white hover:bg-slate-800'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-indigo-700 hover:bg-indigo-50'
               }`}
             >
-              <LayoutDashboard className="w-4 h-4 text-indigo-400" />
-              <span>Municipal Control Center</span>
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Municipal Admin Control Center</span>
             </button>
           )}
         </div>
