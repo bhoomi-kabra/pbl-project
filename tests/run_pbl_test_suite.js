@@ -673,7 +673,7 @@ async function runTestSuite() {
 }
 
 function generateHtmlReport(stats) {
-  const reportPath = path.join(__dirname, 'PBL_TEST_EXECUTION_REPORT.html');
+  const reportPath = path.resolve(__dirname, '..', 'pgl project assignments', 'Reports', 'PBL_TEST_EXECUTION_REPORT.html');
   const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
   const html = `<!DOCTYPE html>

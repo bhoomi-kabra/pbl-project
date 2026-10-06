@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anti-Fraud & False Report Precautions Guide - Nashik Roads & Civic Monitor</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --accent: #2563eb;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --bg-alt: #f8fafc;
+      --warning: #f59e0b;
+      --danger: #dc2626;
+      --success: #16a34a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f1f5f9;
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 36px 44px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    header {
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-text h1 {
+      font-size: 22px;
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .header-text p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .btn-print {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .callout {
+      background: #fef3c7;
+      border-left: 4px solid var(--warning);
+      padding: 14px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #92400e;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      font-size: 16px;
+      color: #0f172a;
+      margin: 24px 0 10px 0;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 4px;
+    }
+
+    p, li {
+      font-size: 13.5px;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin-bottom: 14px;
+    }
+
+    .card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 13.5px;
+      margin-bottom: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      margin: 14px 0;
+    }
+
+    thead {
+      background: #0f172a;
+      color: white;
+    }
+
+    th, td {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .viva-card {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+
+    .viva-q {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .viva-a {
+      font-size: 13px;
+      color: #1e293b;
+    }
+
+    footer {
+      margin-top: 36px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .container { box-shadow: none; padding: 0; max-width: 100%; }
+      .btn-print { display: none; }
+      .card, .viva-card, table { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-text">
+        <h1>🛡️ Anti-Fraud &amp; False Report Precautions Guide</h1>
+        <p><strong>Nashik Roads &amp; Civic Monitor:</strong> Integrity Protocol, Current Code Safeguards &amp; Viva Q&amp;A</p>
+      </div>
+      <div>
+        <button class="btn-print" onclick="window.print()">
+          🖨️ Print / Save as PDF
+        </button>
+      </div>
+    </header>
+
+    <div class="callout">
+      <strong>IN SIMPLE WORDS:</strong> If people upload fake pictures from Google or report non-existent potholes, municipal teams waste money and time. This document explains what our software currently does, how to see it in the demo, the 5 future industry precautions, and the exact words to say to Sir during viva.
+    </div>
+
+    <h2>1. What False Reports Are &amp; Why It Matters</h2>
+    <p>Municipal civic apps face 4 types of fake submissions:</p>
+    <ul>
+      <li><strong>Downloaded / Google Photos:</strong> A user downloads an old pothole photo from the web and reports it in Nashik.</li>
+      <li><strong>Duplicate Reports:</strong> 10 different people report the same pothole on Gangapur Road, creating 10 duplicate work orders.</li>
+      <li><strong>Out-of-City Submissions:</strong> A user in Mumbai or Pune files a complaint inside Nashik's database.</li>
+      <li><strong>Contractor Fraud:</strong> A contractor marks a road as "Resolved" without actually repairing the road.</li>
+    </ul>
+
+    <h2>2. Current Safeguards Built into Our Code (Show These in Demo)</h2>
+
+    <div class="card">
+      <div class="card-title">1. Mandatory Legal Declaration Checkbox (Section 396 MMC Act)</div>
+      <p>Inside the complaint modal (<code>ComplaintFormModal.tsx</code>), citizens must check a declaration agreeing that submitting fake or downloaded pictures is punishable by law under Section 396 of the Maharashtra Municipal Corporation Act &amp; IT Act 2000.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">2. Exact Landmark Snapping &amp; GPS Pinpoint</div>
+      <p>Citizens cannot type vague or out-of-city locations. Typing <em>"Hirawadi Road"</em> auto-snaps coordinates to <code>[20.0270, 73.8140]</code> and offers official spot tags in Panchavati.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">3. Community Peer Review: "Flag as False Report" Button</div>
+      <p>In the Citizen Feed (<code>SocialMediaFeed.tsx</code>), every card has a <strong>🚩 Flag as False Report</strong> button. If neighbors see an inaccurate report, they flag it. The post immediately displays a red alert banner: <em>"⚠️ Community Alert: Suspected False or Duplicate"</em> and moves to the <strong>"Flagged for Review"</strong> tab for the Ward Officer.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">4. "Closed != Resolved" Contractor Anti-Fraud Engine</div>
+      <p>In <code>VerificationTracker.tsx</code>, municipal contractors are blocked from closing tickets unilaterally. They must upload an "After Repair" photo, and only the citizen reporter has the digital authority to confirm and officially close the ticket.</p>
+    </div>
+
+    <h2>3. The 5-Pillar Industry Solution (Phase-2 Roadmap)</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Pillar</th>
+          <th>Technology</th>
+          <th>How It Stops False Reports in Simple Words</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. EXIF Camera Metadata Lock</strong></td>
+          <td>EXIF.js Parser</td>
+          <td>Extracts hidden GPS and timestamp from photo file. Rejects screenshots and downloaded Google photos that lack camera hardware tags.</td>
+        </tr>
+        <tr>
+          <td><strong>2. Spatial Proximity Clustering</strong></td>
+          <td>PostGIS <code>ST_DWithin(20m)</code></td>
+          <td>If a new complaint is filed within 20 meters of an existing pothole, it auto-merges it into a "+1 Upvote" instead of creating a duplicate ticket.</td>
+        </tr>
+        <tr>
+          <td><strong>3. Mobile OTP Verification</strong></td>
+          <td>SMS Gateway (Fast2SMS / Twilio)</td>
+          <td>Sends 4-digit SMS OTP to verify mobile numbers and limits each phone to max 3 complaints/day to prevent bot spam.</td>
+        </tr>
+        <tr>
+          <td><strong>4. Perceptual Image Hashing (pHash)</strong></td>
+          <td>ImageHash Algorithm</td>
+          <td>Generates an image fingerprint. Detects and blocks the exact same photo reused across multiple complaints.</td>
+        </tr>
+        <tr>
+          <td><strong>5. Civic Karma Trust Score</strong></td>
+          <td>Reputation Algorithm</td>
+          <td>Citizens with confirmed genuine reports gain trust score; accounts with repeatedly flagged false reports get quarantined.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>4. Professor Viva Defense Guide (Exact Words to Say to Sir)</h2>
+
+    <div class="viva-card">
+      <div class="viva-q">❓ Sir asks: "What if someone uploads a downloaded photo of a pothole from Google?"</div>
+      <div class="viva-a">💡 <strong>Answer:</strong> "Sir, currently we require a mandatory legal declaration under Section 396 MMC Act, and local residents can click <strong>'Flag as False Report'</strong> to mark the post for inspection. In Phase-2, we have designed an <strong>EXIF metadata scanner</strong> that checks camera hardware tags and live GPS coordinates inside the JPEG file, automatically rejecting downloaded images."</div>
+    </div>
+
+    <div class="viva-card">
+      <div class="viva-q">❓ Sir asks: "What if 10 people report the exact same road damage?"</div>
+      <div class="viva-a">💡 <strong>Answer:</strong> "Sir, in our feed we have a <strong>'+1 I Face This'</strong> button. In our database roadmap, we use <strong>Spatial Proximity Clustering (within 20 meters)</strong>, which automatically links nearby complaints to the primary ticket and converts them into upvotes instead of creating duplicate repair orders."</div>
+    </div>
+
+    <div class="viva-card">
+      <div class="viva-q">❓ Sir asks: "What if a contractor claims they fixed the road, but did nothing?"</div>
+      <div class="viva-a">💡 <strong>Answer:</strong> "Sir, this is our core innovation: <strong>'Closed != Resolved'</strong>. Contractors cannot close a complaint unilaterally. They must upload an 'After Repair' photo, and the ticket enters PENDING_VERIFICATION. Only the original citizen reporter has the digital sign-off authority to confirm and officially close the ticket."</div>
+    </div>
+
+    <footer>
+      <div>Nashik Municipal Corporation &copy; 2026 Civic Accountability Platform</div>
+      <div>PBL Project Integrity &amp; Anti-Fraud Specification</div>
+    </footer>
+  </div>
+</body>
+</html>

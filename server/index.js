@@ -200,6 +200,36 @@ app.post('/api/tickets/:id/comments', (req, res) => {
   res.json(newComment);
 });
 
+// POST /api/tickets/:id/flag-false - Community report as false / misleading
+app.post('/api/tickets/:id/flag-false', (req, res) => {
+  const { id } = req.params;
+  const { reason, reporterName } = req.body;
+
+  const ticket = db.tickets.find((t) => t.id === id);
+  if (!ticket) {
+    return res.status(404).json({ error: 'Ticket not found' });
+  }
+
+  ticket.falseReportFlags = (ticket.falseReportFlags || 0) + 1;
+  if (!ticket.falseReportReasons) ticket.falseReportReasons = [];
+  ticket.falseReportReasons.push({
+    reason: reason || 'SUSPECTED_FALSE_REPORT',
+    reporter: reporterName || 'Anonymous Citizen',
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  });
+
+  // If 2 or more citizens flag this report, mark for verification review
+  if (ticket.falseReportFlags >= 2) {
+    ticket.isSuspectedFalse = true;
+  }
+
+  saveDatabase(db);
+  io.emit('ticket_updated', ticket);
+
+  console.log(`🚩 False report flag logged in backend DB for ticket ${id} (Total flags: ${ticket.falseReportFlags})`);
+  res.json(ticket);
+});
+
 // PATCH /api/tickets/:id/resolve - Admin resolve with proof photo
 app.patch('/api/tickets/:id/resolve', (req, res) => {
   const { id } = req.params;

@@ -9,6 +9,7 @@ import {
   submitPlusOneToDatabase, 
   submitCommentToDatabase, 
   resolveTicketInDatabase,
+  submitFlagFalseToDatabase,
   fetchProjectsFromDatabase,
   postProjectToDatabase,
   updateProjectStatusInDatabase,
@@ -201,6 +202,29 @@ export function App() {
     await submitCommentToDatabase(ticketId, userName, userRole, commentText);
   };
 
+  // Flag ticket as false report & save to backend database
+  const handleFlagFalseReport = async (ticketId: string, reason: string) => {
+    const reporterName = currentUser ? currentUser.name : 'Anonymous Citizen';
+
+    setTickets((prev) =>
+      prev.map((tk) => {
+        if (tk.id === ticketId) {
+          const newFlags = (tk.falseReportFlags || 0) + 1;
+          return {
+            ...tk,
+            falseReportFlags: newFlags,
+            isSuspectedFalse: newFlags >= 2,
+          };
+        }
+        return tk;
+      })
+    );
+
+    await submitFlagFalseToDatabase(ticketId, reason, reporterName);
+    setLiveToastNotification(`🚩 Community Flag Recorded: Report submitted to Ward Engineer for on-site inspection.`);
+    setTimeout(() => setLiveToastNotification(null), 4000);
+  };
+
   // Citizen audit vote
   const handleUpdateTicketVote = (ticketId: string, action: 'confirm' | 'reopen') => {
     setTickets((prev) =>
@@ -291,6 +315,7 @@ export function App() {
             onOpenReportModal={handleOpenGeneralReportModal}
             onPlusOneVote={handlePlusOneVote}
             onAddComment={handleAddComment}
+            onFlagFalse={handleFlagFalseReport}
           />
         )}
 

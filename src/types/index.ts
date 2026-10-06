@@ -101,6 +101,9 @@ export interface CivicTicket {
   userVerificationState?: 'none' | 'confirmed' | 'reopened';
   reporterName?: string;
   reporterMobile?: string;
+  falseReportFlags?: number;
+  isSuspectedFalse?: boolean;
+  falseReportReasons?: { reason: string; reporter: string; timestamp: string }[];
 }
 
 export type Language = 'en' | 'mr';

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { Language, WardName, HazardType, ThemeMode, DepartmentType, CivicTicket } from '../types';
 import { translations } from '../data/translations';
-import { X, AlertTriangle, ShieldCheck, Camera, CheckCircle2, MapPin, Locate, Crosshair, Search } from 'lucide-react';
+import { X, AlertTriangle, ShieldCheck, Camera, CheckCircle2, MapPin, Locate, Crosshair, Search, ShieldAlert, User, Phone } from 'lucide-react';
 
 interface ComplaintFormModalProps {
   isOpen: boolean;
@@ -141,6 +141,9 @@ export const ComplaintFormModal: React.FC<ComplaintFormModalProps> = ({
   const [aiConfidence, setAiConfidence] = useState<number | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [gpsDetecting, setGpsDetecting] = useState<boolean>(false);
+  const [reporterName, setReporterName] = useState<string>('');
+  const [reporterMobile, setReporterMobile] = useState<string>('');
+  const [isTruthDeclared, setIsTruthDeclared] = useState<boolean>(true);
 
   const miniMapContainerRef = useRef<HTMLDivElement | null>(null);
   const miniMapRef = useRef<L.Map | null>(null);
@@ -403,6 +406,10 @@ export const ComplaintFormModal: React.FC<ComplaintFormModalProps> = ({
       citizenVotesConfirmed: 0,
       citizenVotesReopened: 0,
       userVerificationState: 'none',
+      reporterName: reporterName || 'Citizen Reporter',
+      reporterMobile: reporterMobile || '',
+      falseReportFlags: 0,
+      isSuspectedFalse: false,
       comments: []
     };
 
@@ -620,6 +627,61 @@ export const ComplaintFormModal: React.FC<ComplaintFormModalProps> = ({
                   </div>
                 </div>
               )}
+            </label>
+          </div>
+
+          {/* 7. Citizen Contact Info for Verification */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">
+                7. Your Name (नाव)
+              </label>
+              <div className="relative flex items-center">
+                <User className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
+                <input
+                  type="text"
+                  value={reporterName}
+                  onChange={(e) => setReporterName(e.target.value)}
+                  placeholder="e.g. Aarav Deshmukh"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-8 pr-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition text-xs"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">
+                Mobile Number (मोबाईल क्र.)
+              </label>
+              <div className="relative flex items-center">
+                <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
+                <input
+                  type="tel"
+                  maxLength={10}
+                  value={reporterMobile}
+                  onChange={(e) => setReporterMobile(e.target.value)}
+                  placeholder="e.g. 9823011223"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-8 pr-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition text-xs font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 8. Anti-Fraud & False Report Precaution Declaration */}
+          <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-2xl text-xs space-y-1.5">
+            <div className="flex items-center gap-1.5 font-bold text-amber-900 text-xs">
+              <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" />
+              <span>Anti-Fraud & Genuine Report Declaration (सत्यता प्रतिज्ञापत्र)</span>
+            </div>
+            <label className="flex items-start gap-2.5 cursor-pointer pt-0.5">
+              <input
+                type="checkbox"
+                required
+                checked={isTruthDeclared}
+                onChange={(e) => setIsTruthDeclared(e.target.checked)}
+                className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 shrink-0"
+              />
+              <span className="text-[11px] text-amber-800 leading-snug">
+                I solemnly certify that this road problem is genuine. I understand that submitting fake, staged, or downloaded pictures is an offense under Section 396 of the Maharashtra Municipal Corporation Act & IT Act 2000.
+              </span>
             </label>
           </div>
 
