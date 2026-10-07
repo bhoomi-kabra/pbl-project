@@ -21,17 +21,22 @@ import {
   SlidersHorizontal,
   Split,
   Eye,
-  X
+  X,
+  ArrowRight,
+  Flag
 } from 'lucide-react';
 
 interface VerificationTrackerProps {
   tickets: Ticket[];
   onVote: (ticketId: string, voteType: 'CONFIRM' | 'REOPEN', reason?: string) => Promise<void>;
   selectedTicketId?: string | null;
+  onNavigateToFeed?: () => void;
 }
 
-export default function VerificationTracker({ tickets, onVote, selectedTicketId }: VerificationTrackerProps) {
+export default function VerificationTracker({ tickets, onVote, selectedTicketId, onNavigateToFeed }: VerificationTrackerProps) {
   const { t } = useApp();
+
+  const [verifyTab, setVerifyTab] = useState<'AWAITING' | 'HOW_IT_WORKS'>('AWAITING');
 
   const candidateTickets = tickets.filter(
     (t) => t.status === 'VERIFICATION_PENDING' || t.status === 'REOPENED' || t.afterImageUrl
@@ -86,31 +91,131 @@ export default function VerificationTracker({ tickets, onVote, selectedTicketId 
     }
   };
 
-  if (!activeTicket) {
-    return (
-      <div className="p-12 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
-        <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto" />
-        <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm">All Fixed Tickets Verified!</h3>
-        <p className="text-slate-500 text-xs max-w-sm mx-auto">
-          There are currently no tickets awaiting citizen quorum verification.
-        </p>
-      </div>
-    );
-  }
-
-  const isClosed = activeTicket.status === 'OFFICIALLY_CLOSED';
-  const isReopened = activeTicket.status === 'REOPENED';
-  const votesCount = activeTicket.confirmVotes || 0;
+  const isClosed = activeTicket?.status === 'OFFICIALLY_CLOSED';
+  const isReopened = activeTicket?.status === 'REOPENED';
+  const votesCount = activeTicket?.confirmVotes || 0;
 
   return (
-    <div className="space-y-4">
+    <div className="w-full max-w-xl sm:max-w-4xl mx-auto space-y-5 pb-8">
       
-      {/* Top Header & Overview */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-            <ShieldCheck className="w-5 h-5" />
+      {/* 1. Header (Figma Screen 6) */}
+      <div className="space-y-1">
+        <h1 className="text-[26px] sm:text-[32px] font-black text-[#111d2e] dark:text-slate-100 tracking-tight leading-tight">
+          Look closer.
+          <br />
+          Keep closure honest.
+        </h1>
+        <p className="text-[13px] sm:text-[14px] text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed">
+          Review repair evidence when a report becomes eligible for citizen verification.
+        </p>
+      </div>
+
+      {/* 2. Pill Tabs */}
+      <div className="flex items-center gap-2 pt-0.5">
+        <button
+          onClick={() => setVerifyTab('AWAITING')}
+          className={`px-4 py-2 rounded-full text-xs font-bold transition ${
+            verifyTab === 'AWAITING'
+              ? 'bg-[#111d2e] text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs'
+              : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+          }`}
+        >
+          Awaiting review
+        </button>
+        <button
+          onClick={() => setVerifyTab('HOW_IT_WORKS')}
+          className={`px-4 py-2 rounded-full text-xs font-bold transition ${
+            verifyTab === 'HOW_IT_WORKS'
+              ? 'bg-[#111d2e] text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs'
+              : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+          }`}
+        >
+          How it works
+        </button>
+      </div>
+      
+      {/* HOW IT WORKS TAB */}
+      {verifyTab === 'HOW_IT_WORKS' && (
+        <div className="rounded-3xl bg-white dark:bg-[#0c1322] border border-slate-200/90 dark:border-slate-800 p-6 sm:p-8 space-y-6 shadow-xs">
+          <div className="flex items-start gap-3.5 border-b border-slate-100 dark:border-slate-800/80 pb-5">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-[#d95b18] font-black shrink-0">
+              1
+            </div>
+            <div>
+              <h4 className="text-[15px] font-bold text-[#111d2e] dark:text-slate-100">
+                Contractor Submits Geotagged Proof
+              </h4>
+              <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                After completing road, drainage, or pothole repair, the contractor uploads high-resolution photographic proof with verified GPS coordinates and engineer timestamp.
+              </p>
+            </div>
           </div>
+
+          <div className="flex items-start gap-3.5 border-b border-slate-100 dark:border-slate-800/80 pb-5">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-[#d95b18] font-black shrink-0">
+              2
+            </div>
+            <div>
+              <h4 className="text-[15px] font-bold text-[#111d2e] dark:text-slate-100">
+                3-Citizen Quorum Review
+              </h4>
+              <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                Under the Closed ≠ Resolved doctrine, municipal closure is not accepted until 3 independent local citizens inspect the physical repair and cast confirmation votes.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-[#d95b18] font-black shrink-0">
+              3
+            </div>
+            <div>
+              <h4 className="text-[15px] font-bold text-[#111d2e] dark:text-slate-100">
+                Official Resolution or DLP Warranty Reopen
+              </h4>
+              <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                If verified by 3 citizens, the complaint receives official resolution. If flagged as substandard or washed out, the complaint reopens and contractor warranty penalties trigger.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AWAITING REVIEW TAB */}
+      {verifyTab === 'AWAITING' && candidateTickets.length === 0 && (
+        <div className="rounded-3xl bg-white dark:bg-[#0c1322] border border-slate-200/90 dark:border-slate-800 p-8 sm:p-12 text-center space-y-4 shadow-xs">
+          <div className="w-16 h-16 rounded-2xl bg-[#fef2ea] dark:bg-slate-800 text-[#d95b18] flex items-center justify-center mx-auto border border-[#fae8dc] dark:border-slate-700">
+            <ShieldCheck className="w-8 h-8" />
+          </div>
+          <div className="space-y-1.5">
+            <h3 className="text-[18px] sm:text-[20px] font-black text-[#111d2e] dark:text-slate-100">
+              No reports to verify yet
+            </h3>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+              0 under citizen verification in the supplied snapshot. The {tickets.length || 2} active complaints remain Pending Review.
+            </p>
+          </div>
+          <div className="pt-2">
+            <button
+              onClick={onNavigateToFeed}
+              className="inline-flex items-center gap-2 py-3 px-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-[#111d2e] dark:text-slate-100 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-xs"
+            >
+              <ArrowRight className="w-4 h-4 text-[#d95b18]" />
+              <span>Browse Civic Feed</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ACTIVE STUDIO GRID WHEN TICKETS ARE AWAITING */}
+      {verifyTab === 'AWAITING' && candidateTickets.length > 0 && (
+        <>
+          {/* Top Header & Overview */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100">
@@ -480,6 +585,52 @@ export default function VerificationTracker({ tickets, onVote, selectedTicketId 
 
         </div>
 
+      </div>
+      </>
+      )}
+
+      {/* 3-vote quorum Card (Figma Screen 6) */}
+      <div className="rounded-2xl bg-[#fdf5f0] dark:bg-slate-900/60 border border-[#fae8dc] dark:border-slate-800 p-4 sm:p-5 flex items-start gap-3.5">
+        <div className="w-8 h-8 rounded-xl bg-orange-100/80 dark:bg-orange-950/40 text-[#d95b18] flex items-center justify-center shrink-0 border border-[#fae8dc] dark:border-orange-800/60">
+          <ShieldCheck className="w-4 h-4" />
+        </div>
+        <div className="space-y-0.5">
+          <h4 className="text-[14px] font-bold text-[#111d2e] dark:text-slate-100">
+            3-vote quorum
+          </h4>
+          <p className="text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed">
+            Verification needs a community quorum. This is the rule—not a vote tally for either report.
+          </p>
+        </div>
+      </div>
+
+      {/* Before you verify checklist (Figma Screen 6) */}
+      <div className="space-y-3 pt-2">
+        <h4 className="text-[16px] font-black text-[#111d2e] dark:text-slate-100 px-1">
+          Before you verify
+        </h4>
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+            <MapPin className="w-4 h-4 text-[#d95b18] shrink-0" />
+            <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+              Check the same location and issue.
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+            <FileCheck2 className="w-4 h-4 text-[#d95b18] shrink-0" />
+            <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+              Inspect genuine repair evidence.
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+            <Flag className="w-4 h-4 text-[#d95b18] shrink-0" />
+            <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+              Flag concerns: don't make accusations.
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Modal: Reopen Substandard Work */}

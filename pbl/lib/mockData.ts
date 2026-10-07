@@ -140,6 +140,78 @@ export const INITIAL_PROJECTS: RoadProject[] = [
 
 export const INITIAL_TICKETS: Ticket[] = [
   {
+    id: 'tkt-figma-01',
+    title: 'Uncovered drainage manhole',
+    description: 'Open drainage manhole chamber exposed on the Godavari ghat walkway, posing severe fall risk for elderly pilgrims and evening visitors.',
+    category: 'OPEN_MANHOLE',
+    ward: 'Panchavati',
+    locationName: 'Panchavati · Near Ramkund / Godavari',
+    lat: 20.0068,
+    lng: 73.7922,
+    beforeImageUrl: 'https://images.unsplash.com/photo-1584467735871-8e85353a8413?auto=format&fit=crop&w=800&q=80',
+    afterImageUrl: 'https://images.unsplash.com/photo-1590069261209-f8e9b8642343?auto=format&fit=crop&w=800&q=80',
+    status: 'VERIFICATION_PENDING',
+    citizenName: 'Bhoomi Kabra',
+    citizenEmail: 'bhoomi.kabra@example.com',
+    contractorName: 'Panchavati Civil Engineers Ltd',
+    contractorId: 'usr_contractor_3',
+    tenderId: 'NMC/PWD/2024/052',
+    upvotes: 1,
+    confirmVotes: 1,
+    reopenVotes: 0,
+    impactScore: 120,
+    createdAt: '2025-02-24T10:15:00Z',
+    resolvedAt: '2025-02-25T16:30:00Z',
+    auditTrail: [
+      {
+        id: 'aud-bk-1',
+        timestamp: '2025-02-24T10:15:00Z',
+        action: 'Complaint Logged with Geotagged Photo',
+        performedBy: 'Bhoomi Kabra',
+        role: 'CITIZEN'
+      },
+      {
+        id: 'aud-bk-2',
+        timestamp: '2025-02-25T16:30:00Z',
+        action: 'After-Repair Photographic Proof Uploaded',
+        performedBy: 'Panchavati Civil Engineers Ltd',
+        role: 'CONTRACTOR',
+        note: 'Cast iron frame and reinforced lid installed.'
+      }
+    ]
+  },
+  {
+    id: 'tkt-figma-02',
+    title: '2 potholes near Indu Heights',
+    description: 'Two sharp potholes on the Vidhate Nagar to Hirawadi Road link opposite Indu Heights. Vehicles suddenly swerving.',
+    category: 'POTHOLE',
+    ward: 'Panchavati',
+    locationName: 'Panchavati · Vidhate Nagar / Hirawadi Road',
+    lat: 20.0150,
+    lng: 73.8010,
+    beforeImageUrl: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80',
+    status: 'VERIFICATION_PENDING',
+    citizenName: 'Rahul Deshmukh',
+    citizenEmail: 'rahul.d@example.com',
+    contractorName: 'Panchavati Civil Engineers Ltd',
+    contractorId: 'usr_contractor_3',
+    tenderId: 'NMC/PWD/2024/052',
+    upvotes: 3,
+    confirmVotes: 0,
+    reopenVotes: 0,
+    impactScore: 190,
+    createdAt: '2025-02-24T11:45:00Z',
+    auditTrail: [
+      {
+        id: 'aud-rd-1',
+        timestamp: '2025-02-24T11:45:00Z',
+        action: 'Pothole Hazard Reported by Resident',
+        performedBy: 'Rahul Deshmukh',
+        role: 'CITIZEN'
+      }
+    ]
+  },
+  {
     id: 'tkt-01',
     title: 'Deep Hazardous Potholes Cluster opposite ABB Circle',
     description: 'Multiple 15cm deep potholes causing two-wheeler skidding during evening rush hour. Sharp asphalt edges exposed.',

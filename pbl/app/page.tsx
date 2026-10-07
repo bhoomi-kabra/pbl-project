@@ -14,6 +14,7 @@ import ChatbotWidget from '@/components/ChatbotWidget';
 import ComplaintModal from '@/components/ComplaintModal';
 import LandingOverview from '@/components/LandingOverview';
 import AuthModal from '@/components/AuthModal';
+import CivicSpace from '@/components/CivicSpace';
 import { 
   Building2, 
   Layers, 
@@ -21,7 +22,11 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   Clock, 
-  Flame
+  Flame,
+  Home,
+  Map,
+  Plus,
+  User
 } from 'lucide-react';
 
 const GisMap = dynamic(() => import('@/components/GisMap'), {
@@ -201,8 +206,8 @@ export default function HomePage() {
       {/* Edge-to-edge Header */}
       <Header activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* Main Full-Width Fluid Workspace */}
-      <main className="flex-1 w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-5 space-y-5">
+      {/* Main Workspace (Edge-to-edge on mobile, neatly framed on desktop) */}
+      <main className="flex-1 w-full px-0 sm:px-6 lg:px-8 py-0 sm:py-5 pb-20 sm:pb-5 space-y-5">
         
         {/* Landing Overview Page */}
         {activeTab === 'home' && (
@@ -219,16 +224,20 @@ export default function HomePage() {
               } else {
                 setActiveTab(tab);
               }
-            }} 
+            }}
+            onInspectTicket={handleInspectTicket}
+            tickets={tickets}
+            onUpvote={handleUpvote}
           />
         )}
 
         {/* Live Portal Views (Feed, Map, Verify, Engineer, Contractor, Rules) */}
         {activeTab !== 'home' && (
-          <>
-            {/* Sleek Municipal Telemetry Strip */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 bg-white dark:bg-slate-900/60 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-xs dark:shadow-none">
-              <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/40 transition">
+          <div className="px-3 sm:px-0 space-y-5">
+            {/* Municipal Telemetry Strip - Visible ONLY to Administrators / Engineers / Contractors */}
+            {(currentUser?.role === 'WARD_ENGINEER' || currentUser?.role === 'CONTRACTOR' || (currentUser as any)?.role === 'ADMIN') && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 bg-white dark:bg-slate-900/60 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-xs dark:shadow-none">
+                <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/40 transition">
                 <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                   <Flame className="w-4 h-4" />
                 </div>
@@ -280,6 +289,7 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+          )}
 
             {/* Tab Views */}
             {activeTab === 'feed' && (
@@ -295,6 +305,16 @@ export default function HomePage() {
                 tickets={tickets}
                 projects={projects}
                 onSelectTicket={handleInspectTicket}
+                onOpenReportModal={(loc) => {
+                  if (loc) {
+                    setPrefilledComplaint({
+                      locationName: loc.address,
+                      lat: loc.lat,
+                      lng: loc.lng,
+                    } as any);
+                  }
+                  setIsComplaintModalOpen(true);
+                }}
               />
             )}
 
@@ -303,6 +323,7 @@ export default function HomePage() {
                 tickets={tickets}
                 onVote={handleVerificationVote}
                 selectedTicketId={selectedTicketForVerification}
+                onNavigateToFeed={() => setActiveTab('feed')}
               />
             )}
 
@@ -344,9 +365,18 @@ export default function HomePage() {
             )}
 
             {activeTab === 'rules' && (
-              <CivicSafetyRules />
+              <CivicSafetyRules onBack={() => setActiveTab('feed')} />
             )}
-          </>
+
+            {activeTab === 'you' && (
+              <CivicSpace
+                tickets={tickets}
+                onNavigateToTab={(tab) => setActiveTab(tab)}
+                onOpenAuth={() => setIsAuthModalOpen(true)}
+                onInspectTicket={handleInspectTicket}
+              />
+            )}
+          </div>
         )}
 
       </main>
@@ -393,6 +423,64 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+      
+      {/* Figma Persistent Bottom Navigation Bar (Screens 1, 2, 5) */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-[#0c1322]/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-1.5 px-4 flex items-center justify-around sm:hidden shadow-lg">
+        {/* Feed */}
+        <button
+          onClick={() => setActiveTab('feed')}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            activeTab === 'feed' ? 'text-[#d95b18]' : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Home className="w-5 h-5 stroke-[2.2]" />
+          <span>Feed</span>
+        </button>
+
+        {/* Map */}
+        <button
+          onClick={() => setActiveTab('map')}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            activeTab === 'map' ? 'text-[#d95b18]' : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Map className="w-5 h-5 stroke-[2.2]" />
+          <span>Map</span>
+        </button>
+
+        {/* Report (Prominent Orange Center Button) */}
+        <button
+          onClick={() => setIsComplaintModalOpen(true)}
+          className="flex flex-col items-center gap-0.5 -mt-3 text-[10px] font-bold text-[#d95b18]"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-[#d95b18] text-white flex items-center justify-center shadow-md active:scale-95 transition">
+            <Plus className="w-6 h-6 stroke-[2.5]" />
+          </div>
+          <span>Report</span>
+        </button>
+
+        {/* Verify */}
+        <button
+          onClick={() => setActiveTab('verify')}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            activeTab === 'verify' ? 'text-[#d95b18]' : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
+          <span>Verify</span>
+        </button>
+
+        {/* You (Account / Roles / Civic Space) */}
+        <button
+          onClick={() => setActiveTab('you')}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            activeTab === 'you' ? 'text-[#d95b18]' : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <User className="w-5 h-5 stroke-[2.2]" />
+          <span>{currentUser ? currentUser.name.split(' ')[0] : 'You'}</span>
+        </button>
+      </nav>
     </div>
   );
 }
