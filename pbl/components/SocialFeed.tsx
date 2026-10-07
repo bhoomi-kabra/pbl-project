@@ -4,980 +4,774 @@ import React, { useState } from 'react';
 import { useApp } from '@/lib/AppContext';
 import { Ticket, HazardCategory, Ward, TicketStatus } from '@/lib/types';
 import { 
-  Flame, 
-  MapPin, 
-  ThumbsUp, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Clock, 
-  ArrowRight,
-  Filter, 
-  CheckCircle, 
   Search, 
-  LayoutGrid, 
-  List,
-  Sparkles,
-  Camera,
-  X,
-  User,
-  Share2,
+  SlidersHorizontal, 
+  ChevronDown, 
+  Activity, 
+  ThumbsUp, 
+  MessageSquare, 
+  Share2, 
+  Maximize2, 
+  ImageOff, 
+  Check, 
+  Plus, 
+  ArrowLeft, 
+  Send, 
+  AlertCircle, 
+  Clock, 
+  MapPin, 
+  ChevronRight,
+  MoreHorizontal,
+  CheckCircle2,
   Copy,
-  Check,
+  Link2,
   Flag,
-  MessageSquare,
-  ExternalLink,
-  Send,
-  ShieldCheck,
-  ShieldAlert,
-  Smartphone,
-  Eye,
-  PlusCircle
+  X,
+  ChevronUp
 } from 'lucide-react';
 
 interface SocialFeedProps {
   tickets: Ticket[];
   onUpvote: (ticketId: string) => Promise<void>;
   onInspect: (ticketId: string) => void;
+  onNavigateToMap?: () => void;
 }
 
-interface CitizenComment {
+interface CommentItem {
   id: string;
   userName: string;
   text: string;
   createdAt: string;
 }
 
-const CATEGORY_CHIPS: { id: string; label: string; icon: string }[] = [
-  { id: 'All', label: 'All Hazards', icon: '📍' },
-  { id: 'TRENDING', label: '🔥 Trending', icon: '🔥' },
-  { id: 'POTHOLE', label: 'Potholes', icon: '🪨' },
-  { id: 'ROAD_CAVE_IN', label: 'Cave-Ins', icon: '🕳️' },
-  { id: 'OPEN_MANHOLE', label: 'Open Manholes', icon: '🚷' },
-  { id: 'ELECTRICAL_WIRE', label: 'Dangling Wires', icon: '⚡' },
-  { id: 'WATER_LOGGING', label: 'Water Logging', icon: '🌊' },
-  { id: 'GARBAGE_DUMP', label: 'Garbage Dumps', icon: '🗑️' },
-  { id: 'WATER_LEAKAGE', label: 'Water Leakages', icon: '💧' },
-  { id: 'DRAINAGE_OVERFLOW', label: 'Drainage Overflow', icon: '🚰' },
-  { id: 'STREETLIGHT_DEFECT', label: 'Streetlights', icon: '💡' },
+const CATEGORIES: { id: HazardCategory | 'ALL'; label: string; tag: string }[] = [
+  { id: 'ALL', label: 'All Categories', tag: 'ALL' },
+  { id: 'POTHOLE', label: 'Potholes', tag: 'ROADS' },
+  { id: 'OPEN_MANHOLE', label: 'Open Manholes', tag: 'DRAINAGE' },
+  { id: 'ROAD_CAVE_IN', label: 'Road Cave-Ins', tag: 'SURFACE' },
+  { id: 'ELECTRICAL_WIRE', label: 'Electrical Wires', tag: 'POWER' },
+  { id: 'WATER_LOGGING', label: 'Water Logging', tag: 'DRAINAGE' },
+  { id: 'GARBAGE_DUMP', label: 'Garbage Dump', tag: 'SANITATION' },
+  { id: 'WATER_LEAKAGE', label: 'Water Leakage', tag: 'WATER' },
+  { id: 'DRAINAGE_OVERFLOW', label: 'Drainage Overflow', tag: 'DRAINAGE' },
+  { id: 'STREETLIGHT_DEFECT', label: 'Streetlights', tag: 'POWER' }
 ];
 
-export default function SocialFeed({ tickets, onUpvote, onInspect }: SocialFeedProps) {
-  const { t, language, currentUser, selectedWard, setSelectedWard, setIsComplaintModalOpen } = useApp();
+export default function SocialFeed({ tickets, onUpvote, onInspect, onNavigateToMap }: SocialFeedProps) {
+  const { language, currentUser, setIsComplaintModalOpen } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('All');
-  const [statusFilter, setStatusFilter] = useState<string>('All');
-  const [feedFilterTab, setFeedFilterTab] = useState<'ALL' | 'TRENDING' | 'RESOLVED' | 'FLAGGED'>('ALL');
+  const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING'>('ALL');
+  const [selectedCategory, setSelectedCategory] = useState<HazardCategory | 'ALL'>('ALL');
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [selectedTicketForDetails, setSelectedTicketForDetails] = useState<Ticket | null>(null);
+
+  // Upvote state
   const [upvotedMap, setUpvotedMap] = useState<Record<string, boolean>>({});
-  const [viewStyle, setViewStyle] = useState<'FEED' | 'GRID' | 'TABLE'>('FEED');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Local comments store
-  const [commentsMap, setCommentsMap] = useState<Record<string, CitizenComment[]>>({
-    'tk-001': [
-      { id: 'c1', userName: 'Rajesh Patil (Dwarka)', text: 'Facing this daily during morning school rush. Two bikers slipped yesterday!', createdAt: '2h ago' },
-      { id: 'c2', userName: 'Sneha Deshmukh', text: 'Contractor dumped gravel but left it unrolled. Please expedite concrete cure.', createdAt: '45m ago' }
+  // Local comments state
+  const [commentsMap, setCommentsMap] = useState<Record<string, CommentItem[]>>({
+    'tkt-figma-01': [],
+    'tkt-figma-02': [
+      { id: 'c1', userName: 'Aniket Shinde', text: 'Water collected here after yesterday evening rain. Two-wheelers skidding.', createdAt: '1h ago' }
     ],
-    'tk-002': [
-      { id: 'c3', userName: 'Ganesh Shinde (College Rd)', text: 'Dangerous cave-in right outside the coffee shop. Barricading needed urgently.', createdAt: '1h ago' }
-    ],
-    'tk-004': [
-      { id: 'c4', userName: 'Amit Kulkarni (Dwarka)', text: 'High risk of short circuit in rain. MSEDCL helpline 1912 informed as well.', createdAt: '3h ago' }
+    'tkt-1791305696228': [],
+    'tkt-1791291717551': [
+      { id: 'c2', userName: 'Mahesh Patil', text: 'Near Vidhate Nagar turn, please fix before school bus rush.', createdAt: '3h ago' }
     ]
   });
-  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+  const [commentInput, setCommentInput] = useState('');
 
-  // Flagging system state
-  const [flaggingTicket, setFlaggingTicket] = useState<Ticket | null>(null);
-  const [flagReason, setFlagReason] = useState<string>('DUPLICATE_REPORT');
-  const [flaggedTicketsMap, setFlaggedTicketsMap] = useState<Record<string, { flagged: boolean; reason: string }>>({});
+  // Report Options Bottom Sheet Drawer (Figma Screen 9)
+  const [ticketForOptions, setTicketForOptions] = useState<Ticket | null>(null);
+  const [falseReportAccordionOpen, setFalseReportAccordionOpen] = useState(true);
+  const [concernReason, setConcernReason] = useState('');
+  const [concernSubmitted, setConcernSubmitted] = useState(false);
 
-  const handleUpvoteClick = async (e: React.MouseEvent, id: string) => {
+  const handleOpenOptions = (e: React.MouseEvent, ticket: Ticket) => {
+    e.stopPropagation();
+    setTicketForOptions(ticket);
+    setConcernReason('');
+    setConcernSubmitted(false);
+  };
+
+  const handleUpvote = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (upvotedMap[id]) return;
-    setUpvotedMap((prev) => ({ ...prev, [id]: true }));
+    setUpvotedMap(prev => ({ ...prev, [id]: true }));
     await onUpvote(id);
   };
 
-  const handleAddComment = (ticketId: string) => {
-    const text = commentInputs[ticketId]?.trim();
-    if (!text) return;
+  const handleShare = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(`${window.location.origin}/?ticket=${id}`);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
 
-    const newComment: CitizenComment = {
-      id: `c-${Date.now()}`,
-      userName: currentUser?.name || 'Nashik Citizen',
-      text,
+  const handleAddComment = (ticketId: string) => {
+    if (!commentInput.trim()) return;
+    const newComment: CommentItem = {
+      id: `c_${Date.now()}`,
+      userName: currentUser?.name || 'Nashik Resident',
+      text: commentInput.trim(),
       createdAt: 'Just now'
     };
-
-    setCommentsMap((prev) => ({
+    setCommentsMap(prev => ({
       ...prev,
       [ticketId]: [...(prev[ticketId] || []), newComment]
     }));
-
-    setCommentInputs((prev) => ({ ...prev, [ticketId]: '' }));
+    setCommentInput('');
   };
 
-  const handleShareWhatsApp = (e: React.MouseEvent, ticket: Ticket) => {
-    e.stopPropagation();
-    const text = encodeURIComponent(
-      `🚨 *नाशिक नागरी तक्रार अलर्ट (NMC Civic Alert)*\n` +
-      `📌 *समस्या:* ${ticket.title}\n` +
-      `📍 *ठिकाण:* ${ticket.locationName} (${ticket.ward} प्रभाग)\n` +
-      `🎫 *तक्रार आयडी:* ${ticket.id}\n` +
-      `⚡ *गंभीरता:* ${ticket.impactScore} गुण | *स्थिती:* ${ticket.status}\n\n` +
-      `👉 नाशिक महानगरपालिका पोर्टलवर पहा किंवा +1 पाठिंबा नोंदवा:\n` +
-      `http://localhost:3000/?ticket=${ticket.id}`
-    );
-    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
-  };
+  // Filtered tickets
+  const filteredTickets = tickets.filter(ticket => {
+    const matchesSearch = 
+      ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticket.locationName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticket.citizenName.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const handleShareTwitter = (e: React.MouseEvent, ticket: Ticket) => {
-    e.stopPropagation();
-    const text = encodeURIComponent(
-      `🚨 Civic hazard reported in @NMC_Nashik ${ticket.ward} Ward: "${ticket.title}" at ${ticket.locationName}. Ticket #${ticket.id}. Citizens please verify & upvote! #NashikRoads #CivicAccountability #NMC`
-    );
-    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
-  };
+    const matchesStatus = 
+      filterTab === 'ALL' || 
+      (filterTab === 'PENDING' && (ticket.status === 'VERIFICATION_PENDING' || ticket.status === 'SUBMITTED'));
 
-  const handleCopyLink = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    const link = typeof window !== 'undefined' ? `${window.location.origin}/?ticket=${id}` : `http://localhost:3000/?ticket=${id}`;
-    navigator.clipboard.writeText(link);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
+    const matchesCategory = 
+      selectedCategory === 'ALL' || ticket.category === selectedCategory;
 
-  const handleSubmitFlag = () => {
-    if (!flaggingTicket) return;
-    setFlaggedTicketsMap((prev) => ({
-      ...prev,
-      [flaggingTicket.id]: { flagged: true, reason: flagReason }
-    }));
-    setFlaggingTicket(null);
-  };
-
-  const filteredTickets = tickets.filter((ticket) => {
-    if (selectedWard !== 'All' && ticket.ward !== selectedWard) return false;
-
-    // Filter tab
-    if (feedFilterTab === 'TRENDING') {
-      if ((ticket.upvotes || 0) < 1 && (ticket.impactScore || 0) < 300) return false;
-    } else if (feedFilterTab === 'RESOLVED') {
-      if (ticket.status !== 'OFFICIALLY_CLOSED' && ticket.status !== 'RESOLVED_BY_CONTRACTOR') return false;
-    } else if (feedFilterTab === 'FLAGGED') {
-      if (!flaggedTicketsMap[ticket.id]) return false;
-    }
-
-    // Category chips
-    if (categoryFilter === 'TRENDING') {
-      if ((ticket.upvotes || 0) < 1 && (ticket.impactScore || 0) < 300) return false;
-    } else if (categoryFilter !== 'All' && ticket.category !== categoryFilter) {
-      return false;
-    }
-
-    if (statusFilter !== 'All' && ticket.status !== statusFilter) return false;
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchTitle = ticket.title.toLowerCase().includes(q);
-      const matchDesc = ticket.description.toLowerCase().includes(q);
-      const matchLoc = ticket.locationName.toLowerCase().includes(q);
-      if (!matchTitle && !matchDesc && !matchLoc) return false;
-    }
-    return true;
+    return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  const getStatusBadge = (ticket: Ticket) => {
-    switch (ticket.status) {
-      case 'OFFICIALLY_CLOSED':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 backdrop-blur-md">
-            <CheckCircle className="w-3 h-3" />
-            Verified Closed
-          </span>
-        );
-      case 'VERIFICATION_PENDING':
-        const needed = Math.max(0, 3 - (ticket.confirmVotes || 0));
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 backdrop-blur-md animate-pulse">
-            <Clock className="w-3 h-3" />
-            Verify Proof ({needed} needed)
-          </span>
-        );
-      case 'REOPENED':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30 backdrop-blur-md">
-            <AlertTriangle className="w-3 h-3" />
-            Citizen Reopened
-          </span>
-        );
-      case 'IN_PROGRESS':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/30 backdrop-blur-md">
-            <Clock className="w-3 h-3" />
-            Work In Progress
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-            Pending Review
-          </span>
-        );
-    }
-  };
+  // ────────────────────────────────────────────────────────────
+  // REPORT OPTIONS BOTTOM SHEET DRAWER (Screen 9 in Figma)
+  // ────────────────────────────────────────────────────────────
+  const renderReportOptionsDrawer = () => {
+    if (!ticketForOptions) return null;
 
-  const getWardInitials = (ward: string) => {
-    const parts = ward.split(' ');
-    if (parts.length > 1) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return ward.substring(0, 2).toUpperCase();
-  };
+    return (
+      <div 
+        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4"
+        onClick={() => setTicketForOptions(null)}
+      >
+        <div 
+          className="w-full max-w-md bg-white dark:bg-[#0c1322] rounded-t-3xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto animate-in slide-in-from-bottom-6 duration-200"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Top Drag Indicator */}
+          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto -mt-1 mb-1 sm:hidden" />
 
-  return (
-    <div className="space-y-5">
-      
-      {/* Top Header & Search Bar */}
-      <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4 transition-colors">
-        
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-slate-950 shadow-md flex items-center justify-center shrink-0 font-black">
-              <Share2 className="w-5 h-5 text-white" />
-            </div>
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="font-black text-lg sm:text-xl text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <span>{language === 'mr' ? 'नागरिक सोशल मिडिया तक्रार फिड' : 'Citizen Social Media & Grievance Feed'}</span>
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 font-extrabold border border-amber-500/30">
-                  {filteredTickets.length} Posts
-                </span>
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {language === 'mr' 
-                  ? 'इन्स्टाग्राम-शैली स्क्रोलिंग फिड, थेट नागरिक टिप्पण्या, व्हॉट्सअॅप शेअरिंग व ॲन्टी-फ्रॉड पडताळणी'
-                  : 'Instagram-style scrolling feed, live citizen testimony, WhatsApp/X sharing & anti-fraud verification'}
+              <h3 className="text-[20px] font-black text-[#111d2e] dark:text-slate-100 tracking-tight leading-snug">
+                Report options
+              </h3>
+              <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
+                {ticketForOptions.citizenName} · {ticketForOptions.title}
               </p>
             </div>
+            <button
+              onClick={() => setTicketForOptions(null)}
+              className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Quick Action Button */}
-          <button
-            onClick={() => setIsComplaintModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-slate-950 font-black text-xs shadow-md shadow-orange-500/20 transition transform active:scale-95 shrink-0 self-start sm:self-auto"
-          >
-            <Camera className="w-4 h-4" />
-            <span>+ Report Grievance</span>
-          </button>
-        </div>
+          {/* Action List Items */}
+          <div className="space-y-1 pt-1">
+            {/* Share report */}
+            <button
+              onClick={(e) => handleShare(e, ticketForOptions.id)}
+              className="w-full flex items-center gap-3.5 py-3 px-3.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60 text-left font-bold text-slate-800 dark:text-slate-200 transition"
+            >
+              <Share2 className="w-5 h-5 text-slate-700 dark:text-slate-300 shrink-0" />
+              <span className="text-[14px]">Share report</span>
+            </button>
 
-        {/* Anti-Fraud / False Report Precaution Callout Banner */}
-        <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="font-extrabold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 text-xs">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              NMC Anti-Fraud & False Report Precaution Protocol Active
-            </span>
-            <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 px-2.5 py-0.5 rounded-full">
-              4-Tier Integrity Check
-            </span>
+            {/* Copy link */}
+            <button
+              onClick={(e) => handleCopyLink(e, ticketForOptions.id)}
+              className="w-full flex items-center gap-3.5 py-3 px-3.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60 text-left font-bold text-slate-800 dark:text-slate-200 transition"
+            >
+              <Link2 className="w-5 h-5 text-slate-700 dark:text-slate-300 shrink-0" />
+              <span className="text-[14px]">
+                {copiedId === ticketForOptions.id ? 'Copied link to clipboard!' : 'Copy link'}
+              </span>
+            </button>
+
+            {/* Inspect report & evidence */}
+            <button
+              onClick={() => {
+                onInspect(ticketForOptions.id);
+                setTicketForOptions(null);
+              }}
+              className="w-full flex items-center justify-between py-3 px-3.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60 text-left font-bold text-slate-800 dark:text-slate-200 transition"
+            >
+              <div className="flex items-center gap-3.5">
+                <Maximize2 className="w-5 h-5 text-slate-700 dark:text-slate-300 shrink-0" />
+                <span className="text-[14px]">Inspect report & evidence</span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400" />
+            </button>
           </div>
-          <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px]">
-            To ensure zero false alarms: Every submission undergoes <strong>GPS Geotag cross-checking</strong> against official ward boundaries, <strong>AI hazard pattern analysis</strong>, and <strong>Community Peer Review</strong>. Citizens can flag suspicious reports using the <Flag className="w-3 h-3 text-red-500 inline mx-0.5" /> button.
-          </p>
-        </div>
 
-        {/* Search, Status & View Mode Row */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
-          
-          {/* Search Box */}
-          <div className="relative flex-1 min-w-0">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by street name, defect, or landmark..."
-              className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
+          {/* Flag as false report (Expandable Peach Card) */}
+          <div className="rounded-2xl bg-[#fef2ea] dark:bg-slate-900/90 border border-[#fae8dc] dark:border-slate-800 p-4 space-y-3">
+            <button
+              type="button"
+              onClick={() => setFalseReportAccordionOpen(!falseReportAccordionOpen)}
+              className="w-full flex items-center justify-between text-left"
+            >
+              <div className="flex items-center gap-2.5 text-[#d95b18] font-bold text-[14px]">
+                <Flag className="w-4 h-4 text-[#d95b18]" />
+                <span>Flag as false report</span>
+              </div>
+              {falseReportAccordionOpen ? (
+                <ChevronUp className="w-4 h-4 text-[#d95b18]" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-[#d95b18]" />
+              )}
+            </button>
+
+            {falseReportAccordionOpen && (
+              <div className="space-y-3 pt-1 text-[12px] animate-in fade-in-50 duration-150">
+                <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Flag suspicious content—not a new civic issue. A concern prompts review; it does not prove the report is false.
+                </p>
+
+                {concernSubmitted ? (
+                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-800 dark:text-emerald-300 text-xs font-semibold">
+                    ✓ Concern sent for municipal review. NMC will inspect the report evidence.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="block text-[12px] font-bold text-slate-700 dark:text-slate-300">
+                        Reason for concern *
+                      </label>
+                      <select
+                        value={concernReason}
+                        onChange={(e) => setConcernReason(e.target.value)}
+                        className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#d95b18]"
+                      >
+                        <option value="">Choose a reason</option>
+                        <option value="duplicate">Duplicate report</option>
+                        <option value="inaccurate_location">Inaccurate location</option>
+                        <option value="spam_photo">Irrelevant or misleading photo</option>
+                        <option value="abusive">Abusive or disrespectful language</option>
+                        <option value="other">Other civic rule concern</option>
+                      </select>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={!concernReason}
+                      onClick={() => {
+                        setConcernSubmitted(true);
+                        setTimeout(() => {
+                          setTicketForOptions(null);
+                        }, 1600);
+                      }}
+                      className="w-full py-2.5 rounded-xl bg-slate-200/90 dark:bg-slate-800 hover:bg-[#d95b18] hover:text-white text-slate-700 dark:text-slate-200 font-bold text-xs transition disabled:opacity-50 disabled:pointer-events-none"
+                    >
+                      Send concern for review
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
-          {/* Status Dropdown */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:outline-none cursor-pointer"
-          >
-            <option value="All">All Statuses</option>
-            <option value="VERIFICATION_PENDING">⏳ Under Verification</option>
-            <option value="REOPENED">⚠️ Citizen Reopened</option>
-            <option value="IN_PROGRESS">🔧 Contractor Working</option>
-            <option value="OFFICIALLY_CLOSED">✅ Verified Closed</option>
-          </select>
+        </div>
+      </div>
+    );
+  };
 
-          {/* View Mode Switcher: FEED (Instagram) vs GRID vs TABLE */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0 self-end sm:self-auto gap-0.5">
-            <button
-              onClick={() => setViewStyle('FEED')}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                viewStyle === 'FEED' 
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 shadow-sm' 
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
-              title="Instagram-Style Scrolling Feed"
-            >
-              <Smartphone className="w-3.5 h-3.5" />
-              <span>Feed</span>
-            </button>
-            <button
-              onClick={() => setViewStyle('GRID')}
-              className={`p-1.5 rounded-lg transition ${
-                viewStyle === 'GRID' 
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm' 
-                  : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-              title="Grid View"
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setViewStyle('TABLE')}
-              className={`p-1.5 rounded-lg transition ${
-                viewStyle === 'TABLE' 
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm' 
-                  : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-              title="Audit Table View"
-            >
-              <List className="w-3.5 h-3.5" />
-            </button>
+  // ────────────────────────────────────────────────────────────
+  // SINGLE REPORT DETAILS VIEW (Screen 3 in Figma)
+  // ────────────────────────────────────────────────────────────
+  if (selectedTicketForDetails) {
+    const ticket = selectedTicketForDetails;
+    const isUpvoted = upvotedMap[ticket.id];
+    const comments = commentsMap[ticket.id] || [];
+
+    return (
+      <div className="w-full max-w-xl sm:max-w-2xl mx-auto bg-white dark:bg-[#0c1322] rounded-none sm:rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden space-y-4 pb-12 transition-colors">
+        
+        {/* Top Header */}
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <button
+            onClick={() => setSelectedTicketForDetails(null)}
+            className="flex items-center gap-2 text-[15px] font-bold text-[#111d2e] dark:text-slate-100 hover:text-[#d95b18] transition"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>{language === 'mr' ? 'अहवाल तपशील' : 'Report details'}</span>
+          </button>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-bold text-slate-500">EN / म</span>
           </div>
         </div>
 
-        {/* Social Feed Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-bold scrollbar-none pt-1 border-t border-slate-100 dark:border-slate-800/80">
-          <button
-            onClick={() => setFeedFilterTab('ALL')}
-            className={`px-3.5 py-1.5 rounded-xl transition shrink-0 ${
-              feedFilterTab === 'ALL'
-                ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-sm'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            All Reports ({tickets.length})
-          </button>
-          <button
-            onClick={() => setFeedFilterTab('TRENDING')}
-            className={`px-3.5 py-1.5 rounded-xl transition flex items-center gap-1 shrink-0 ${
-              feedFilterTab === 'TRENDING'
-                ? 'bg-rose-600 text-white shadow-sm'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            <Flame className="w-3.5 h-3.5 text-rose-500" /> Trending / High Upvotes
-          </button>
-          <button
-            onClick={() => setFeedFilterTab('RESOLVED')}
-            className={`px-3.5 py-1.5 rounded-xl transition flex items-center gap-1 shrink-0 ${
-              feedFilterTab === 'RESOLVED'
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Resolved with Proof
-          </button>
-          <button
-            onClick={() => setFeedFilterTab('FLAGGED')}
-            className={`px-3.5 py-1.5 rounded-xl transition flex items-center gap-1 shrink-0 ${
-              feedFilterTab === 'FLAGGED'
-                ? 'bg-amber-600 text-white shadow-sm'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            <Flag className="w-3.5 h-3.5 text-amber-500" /> Flagged for Review
-          </button>
-        </div>
-
-        {/* Quick Category Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
-          {CATEGORY_CHIPS.map((chip) => {
-            const isSelected = categoryFilter === chip.id;
-            return (
-              <button
-                key={chip.id}
-                onClick={() => setCategoryFilter(chip.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${
-                  isSelected
-                    ? 'bg-slate-900 text-white dark:bg-amber-500 dark:text-slate-950 shadow-xs'
-                    : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700/80'
-                }`}
-              >
-                <span>{chip.icon}</span>
-                <span>{chip.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-      </div>
-
-      {/* ======================================================== */}
-      {/* 1. INSTAGRAM-STYLE SCROLLING FEED (DEFAULT)              */}
-      {/* ======================================================== */}
-      {viewStyle === 'FEED' && (
-        <div className="max-w-2xl mx-auto space-y-6">
-          {filteredTickets.length === 0 ? (
-            <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto text-xl font-bold">
-                🔍
+        {/* Report Content */}
+        <div className="p-4 sm:p-6 space-y-4">
+          
+          {/* Author info */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#fef2ea] border border-[#fae8dc] text-[#d95b18] font-bold text-sm flex items-center justify-center">
+                {ticket.citizenName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
               </div>
-              <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-200">No Complaints Found in {selectedWard}</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                There are currently no active grievances matching your search in this ward. Click below to submit a live report!
-              </p>
-              <button
-                onClick={() => setIsComplaintModalOpen(true)}
-                className="mt-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-sm inline-flex items-center gap-2"
-              >
-                <Camera className="w-4 h-4" /> Report Grievance
-              </button>
+              <div>
+                <div className="text-[14px] font-bold text-[#111d2e] dark:text-slate-100">
+                  {ticket.citizenName}
+                </div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {ticket.ward} ward · Citizen report
+                </div>
+              </div>
             </div>
-          ) : (
-            filteredTickets.map((ticket) => {
-              const isUpvoted = upvotedMap[ticket.id];
-              const isHighImpact = (ticket.impactScore || 0) >= 300 || (ticket.upvotes || 0) >= 2;
-              const isResolved = ticket.status === 'OFFICIALLY_CLOSED' || ticket.status === 'RESOLVED_BY_CONTRACTOR';
-              const flagInfo = flaggedTicketsMap[ticket.id];
-              const ticketComments = commentsMap[ticket.id] || [];
 
-              return (
-                <article
-                  key={ticket.id}
-                  className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition duration-200 overflow-hidden space-y-4 p-5 sm:p-6"
-                >
-                  {/* Flagged Alert Banner (Precaution) */}
-                  {flagInfo && (
-                    <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-start gap-2.5 text-xs text-rose-800 dark:text-rose-300">
-                      <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <span className="font-black block">
-                          ⚠️ Community Audit Notice: Flagged for Physical Inspection
-                        </span>
-                        <p className="text-[11px] text-rose-700 dark:text-rose-300 mt-0.5">
-                          Citizens flagged this grievance ({flagInfo.reason.replace(/_/g, ' ')}). Ward Officer inspection scheduled before contractor disbursement.
-                        </p>
-                      </div>
-                    </div>
-                  )}
+            <button 
+              onClick={(e) => handleOpenOptions(e, ticket)}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+          </div>
 
-                  {/* Top Author & Ward Header (Instagram-style) */}
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-orange-600 text-slate-950 font-black text-xs flex items-center justify-center shadow-sm shrink-0 border border-amber-400/40">
-                        {getWardInitials(ticket.ward)}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-black text-slate-900 dark:text-slate-100">
-                            {ticket.citizenName || `Citizen Reporter (${ticket.ward})`}
-                          </span>
-                          <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center gap-0.5">
-                            <MapPin className="w-3 h-3 text-amber-500" /> {ticket.ward} Ward
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-400 font-medium">
-                          Ticket #{ticket.id} • {new Date(ticket.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
+          {/* Category & Status */}
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              {ticket.category === 'POTHOLE' ? 'ROADS' : ticket.category === 'OPEN_MANHOLE' ? 'DRAINAGE' : ticket.category}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#fef2ea] text-[#d95b18] border border-[#fae8dc]">
+              {ticket.status === 'VERIFICATION_PENDING' ? 'Pending Review' : ticket.status}
+            </span>
+          </div>
 
-                    {/* Status & Impact Badges */}
-                    <div className="flex items-center gap-2">
-                      {isHighImpact && (
-                        <span className="text-[10px] font-black text-rose-700 dark:text-rose-300 bg-rose-500/10 px-2.5 py-1 rounded-full border border-rose-500/25 flex items-center gap-1">
-                          <Flame className="w-3.5 h-3.5 text-rose-500" />
-                          <span>HIGH IMPACT ({ticket.upvotes + (isUpvoted ? 1 : 0)})</span>
-                        </span>
-                      )}
-                      {getStatusBadge(ticket)}
-                    </div>
-                  </div>
-
-                  {/* Title & Location */}
-                  <div>
-                    <h3 
-                      onClick={() => onInspect(ticket.id)}
-                      className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 leading-snug cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 transition"
-                    >
-                      {ticket.title}
-                    </h3>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-1 leading-relaxed">
-                      {ticket.description}
-                    </p>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-semibold mt-2">
-                      <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                      <span>{ticket.locationName}</span>
-                    </div>
-                  </div>
-
-                  {/* Instagram-Style Large Media Image Container */}
-                  <div className="rounded-2xl overflow-hidden border border-slate-200/90 dark:border-slate-800 relative group aspect-[16/10] sm:aspect-[16/9] shadow-sm bg-slate-950">
-                    <img 
-                      src={ticket.beforeImageUrl} 
-                      alt={ticket.title}
-                      className="w-full h-full object-cover group-hover:scale-102 transition duration-300 cursor-pointer"
-                      onClick={() => onInspect(ticket.id)}
-                    />
-                    
-                    {/* Top Floating GPS Geotag Badge */}
-                    <div className="absolute top-3 left-3 bg-slate-950/85 backdrop-blur-md px-3 py-1 rounded-xl border border-white/20 text-[10px] font-mono font-bold text-white flex items-center gap-1.5 shadow-md">
-                      <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                      <span>GPS Geotagged: {ticket.lat.toFixed(4)}°N, {ticket.lng.toFixed(4)}°E (Nashik)</span>
-                    </div>
-
-                    {/* Bottom Floating AI Confidence Badge */}
-                    <div className="absolute bottom-3 right-3 bg-slate-950/85 backdrop-blur-md px-2.5 py-1 rounded-xl border border-amber-400/40 text-[10px] font-bold text-amber-300 flex items-center gap-1 shadow-md">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                      <span>AI Confidence 96%</span>
-                    </div>
-                  </div>
-
-                  {/* Resolution Proof Photo Display (If resolved) */}
-                  {ticket.afterImageUrl && (
-                    <div className="rounded-2xl overflow-hidden border border-emerald-500/40 relative group aspect-[16/9] shadow-sm bg-emerald-950">
-                      <img 
-                        src={ticket.afterImageUrl} 
-                        alt="Resolution Proof" 
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-3 left-3 bg-emerald-900/90 backdrop-blur-md px-3 py-1 rounded-xl border border-emerald-400 text-[10px] font-mono font-bold text-emerald-200 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Official Municipal Repair Proof Attached</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Social Share Ribbon (WhatsApp / Twitter / Copy) */}
-                  <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <span className="font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 text-[11px]">
-                      <Share2 className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Share on Social Media:</span>
-                    </span>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {/* WhatsApp Button */}
-                      <button
-                        onClick={(e) => handleShareWhatsApp(e, ticket)}
-                        className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1 transition shadow-xs"
-                        title="Share on WhatsApp with neighborhood groups"
-                      >
-                        <span>💬 WhatsApp</span>
-                      </button>
-
-                      {/* Twitter / X Button */}
-                      <button
-                        onClick={(e) => handleShareTwitter(e, ticket)}
-                        className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-black text-white dark:bg-slate-800 dark:hover:bg-slate-700 font-bold text-[11px] flex items-center gap-1 transition shadow-xs"
-                        title="Tag @NMC_Nashik on Twitter / X"
-                      >
-                        <span>𝕏 Twitter / X</span>
-                      </button>
-
-                      {/* Copy Link Button */}
-                      <button
-                        onClick={(e) => handleCopyLink(e, ticket.id)}
-                        className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1 transition shadow-xs"
-                        title="Copy direct shareable link"
-                      >
-                        {copiedId === ticket.id ? (
-                          <>
-                            <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                            <span className="text-emerald-700 dark:text-emerald-400">Copied!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3 h-3 text-slate-500" />
-                            <span>Copy Link</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Citizen Interaction Bar (+1 Vote, Comments Count, Flag, Inspect) */}
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between text-xs gap-2">
-                    <div className="flex items-center gap-2">
-                      {/* +1 Impact Button */}
-                      <button
-                        onClick={(e) => handleUpvoteClick(e, ticket.id)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition transform active:scale-95 ${
-                          isUpvoted
-                            ? 'bg-amber-500 text-slate-950 shadow-xs'
-                            : 'bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30'
-                        }`}
-                        title="Click +1 if you are also facing this civic problem!"
-                      >
-                        <ThumbsUp className={`w-3.5 h-3.5 ${isUpvoted ? 'fill-current' : 'text-rose-600 dark:text-rose-400'}`} />
-                        <span>+1 I Face This ({ticket.upvotes + (isUpvoted ? 1 : 0)})</span>
-                      </button>
-
-                      <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                        <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{ticketComments.length} Comments</span>
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {/* Flag as False / Fake Report Button */}
-                      <button
-                        onClick={() => setFlaggingTicket(ticket)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 border border-transparent hover:border-red-200 dark:hover:border-red-500/30 transition"
-                        title="Report this complaint as fake, duplicate, or inaccurate"
-                      >
-                        <Flag className="w-3.5 h-3.5 text-slate-400 group-hover:text-red-500" />
-                        <span>Flag as False Report</span>
-                      </button>
-
-                      {/* Inspect Proof Button */}
-                      <button
-                        onClick={() => onInspect(ticket.id)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition"
-                      >
-                        <Eye className="w-3 h-3 text-amber-500" />
-                        <span>Inspect</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Citizen Comments List */}
-                  {ticketComments.length > 0 && (
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-2 text-xs bg-slate-50 dark:bg-slate-950/50 p-3 rounded-2xl">
-                      {ticketComments.map((cm) => (
-                        <div key={cm.id} className="flex items-start gap-2">
-                          <span className="font-extrabold text-amber-600 dark:text-amber-400 text-[11px] shrink-0">
-                            {cm.userName}:
-                          </span>
-                          <div className="flex-1">
-                            <p className="text-[11px] text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
-                              {cm.text}
-                            </p>
-                            <span className="text-[9px] text-slate-400 font-mono">{cm.createdAt}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Add Citizen Comment Input */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <input
-                      type="text"
-                      value={commentInputs[ticket.id] || ''}
-                      onChange={(e) => setCommentInputs({ ...commentInputs, [ticket.id]: e.target.value })}
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddComment(ticket.id)}
-                      placeholder="Add a citizen comment or testimony..."
-                      className="w-full text-xs rounded-xl px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
-                    />
-                    <button
-                      onClick={() => handleAddComment(ticket.id)}
-                      className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-slate-950 p-2.5 rounded-xl transition shrink-0 shadow-sm"
-                      title="Post citizen comment"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
-                  </div>
-                </article>
-              );
-            })
-          )}
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* 2. CARD GRID VIEW (COMPACT DASHBOARD)                    */}
-      {/* ======================================================== */}
-      {viewStyle === 'GRID' && (
-        filteredTickets.length === 0 ? (
-          <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto text-xl font-bold">
-              🔍
-            </div>
-            <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200">No Complaints Match Your Filter</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Try adjusting your search keywords or switching to "All Hazards" to view other tickets across Nashik.
+          {/* Title & Location */}
+          <div className="space-y-1">
+            <h1 className="text-[20px] sm:text-[22px] font-black text-[#111d2e] dark:text-slate-100 leading-snug">
+              {ticket.title}
+            </h1>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span>{ticket.locationName}</span>
             </p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredTickets.map((ticket) => {
-              const isUpvoted = upvotedMap[ticket.id];
-              const isCritical = ticket.impactScore >= 500;
-              const isPendingVerification = ticket.status === 'VERIFICATION_PENDING';
 
-              return (
-                <div
-                  key={ticket.id}
-                  onClick={() => onInspect(ticket.id)}
-                  className="rounded-2xl overflow-hidden border border-slate-200/90 dark:border-slate-800 hover:border-amber-500/50 transition-all flex flex-col justify-between cursor-pointer group bg-white dark:bg-slate-900/70 shadow-xs hover:shadow-md"
+          {/* Evidence Container (Exact Figma styling) */}
+          <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 text-center space-y-3">
+            {ticket.beforeImageUrl && !ticket.beforeImageUrl.includes('placeholder') ? (
+              <div className="space-y-3">
+                <img
+                  src={ticket.beforeImageUrl}
+                  alt={ticket.title}
+                  className="w-full rounded-xl max-h-72 object-cover mx-auto"
+                />
+                <p className="text-[12px] text-slate-500 dark:text-slate-400">
+                  {ticket.description}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2 py-4">
+                <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+                  <ImageOff className="w-6 h-6" />
+                </div>
+                <h4 className="text-[15px] font-bold text-[#111d2e] dark:text-slate-100">
+                  Submitted photo doesn't match
+                </h4>
+                <p className="text-[12px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                  The source image shows preliminary context. Inspect before supporting.
+                </p>
+                <div className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider pt-1">
+                  EVIDENCE MISMATCH · NOT VERIFIED
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Actions strip */}
+          <div className="flex items-center justify-between py-2 border-y border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
+            <button
+              onClick={(e) => handleUpvote(e, ticket.id)}
+              className={`flex items-center gap-1.5 font-bold transition ${
+                isUpvoted ? 'text-[#d95b18]' : 'hover:text-[#d95b18]'
+              }`}
+            >
+              <ThumbsUp className={`w-4 h-4 ${isUpvoted ? 'fill-[#d95b18]' : ''}`} />
+              <span>{ticket.upvotes + (isUpvoted ? 1 : 0)} support</span>
+            </button>
+
+            <div className="flex items-center gap-1">
+              <MessageSquare className="w-4 h-4" />
+              <span>{comments.length} comments</span>
+            </div>
+
+            <button 
+              onClick={(e) => handleShare(e, ticket.id)}
+              className="hover:text-[#d95b18] transition flex items-center gap-1"
+            >
+              {copiedId === ticket.id ? <Check className="w-4 h-4 text-emerald-500" /> : <Share2 className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {/* Inspect report & evidence Card (Figma Screen 3) */}
+          <div
+            onClick={() => onInspect(ticket.id)}
+            className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between cursor-pointer hover:border-[#d95b18]/50 transition group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#111d2e] dark:text-slate-100">
+                <Maximize2 className="w-4 h-4" />
+              </div>
+              <span className="text-[14px] font-bold text-[#111d2e] dark:text-slate-100 group-hover:text-[#d95b18] transition-colors">
+                Inspect report & evidence
+              </span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+          </div>
+
+          {/* Review needed card */}
+          <div className="p-4 rounded-2xl bg-[#fdf5f0] dark:bg-slate-900/60 border border-[#fae8dc] dark:border-slate-800 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-[#d95b18] shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <div className="text-[13px] font-bold text-[#111d2e] dark:text-slate-100">
+                Review needed
+              </div>
+              <div className="text-[12px] text-[#556377] dark:text-slate-400">
+                Ensure contractor repairs match municipal standards before casting your verification vote.
+              </div>
+            </div>
+          </div>
+
+          {/* Comments Section */}
+          <div className="space-y-3 pt-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[15px] font-black text-[#111d2e] dark:text-slate-100">
+                Comments
+              </h3>
+              <span className="text-xs text-slate-400 font-bold">{comments.length}</span>
+            </div>
+
+            {comments.length === 0 ? (
+              <p className="text-[12px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                No comments yet. Add useful location details or ask a question. Keep it respectful.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {comments.map((c) => (
+                  <div key={c.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs space-y-1">
+                    <div className="flex items-center justify-between font-bold text-[#111d2e] dark:text-slate-200">
+                      <span>{c.userName}</span>
+                      <span className="text-[10px] text-slate-400 font-normal">{c.createdAt}</span>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-300">{c.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Comment Input */}
+            <div className="flex items-center gap-2 pt-2">
+              <input
+                type="text"
+                value={commentInput}
+                onChange={(e) => setCommentInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddComment(ticket.id)}
+                placeholder="Add a comment..."
+                className="flex-1 py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-[#d95b18]"
+              />
+              <button
+                onClick={() => handleAddComment(ticket.id)}
+                className="p-2.5 rounded-xl bg-[#d95b18] hover:bg-[#c24e12] text-white transition shrink-0"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        {renderReportOptionsDrawer()}
+      </div>
+    );
+  }
+
+  // ────────────────────────────────────────────────────────────
+  // MAIN CIVIC FEED STREAM (Screens 1 & 2 in Figma)
+  // ────────────────────────────────────────────────────────────
+  return (
+    <div className="w-full max-w-xl sm:max-w-2xl mx-auto bg-white dark:bg-[#0c1322] rounded-none sm:rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden p-5 sm:p-7 space-y-5 transition-colors">
+      
+      {/* 1. Header Title: "Nashik, together." */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-[28px] sm:text-[34px] font-black text-[#111d2e] dark:text-slate-100 tracking-tight leading-none">
+          {language === 'mr' ? 'एकत्रित नाशिक.' : 'Nashik, together.'}
+        </h1>
+
+        <button 
+          onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+          className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          aria-label="Filter"
+        >
+          <SlidersHorizontal className="w-5 h-5 stroke-[2.2]" />
+        </button>
+      </div>
+
+      {/* 2. Search input */}
+      <div className="relative">
+        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={language === 'mr' ? 'समस्या, रस्ते किंवा ठिकाण शोधा' : 'Search issues, streets or landmarks'}
+          className="w-full pl-10 pr-4 py-2.5 rounded-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[13px] text-[#111d2e] dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-[#d95b18] transition"
+        />
+      </div>
+
+      {/* 3. Filter Chips Row */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+        {/* All reports */}
+        <button
+          onClick={() => {
+            setFilterTab('ALL');
+            setSelectedCategory('ALL');
+          }}
+          className={`px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap ${
+            filterTab === 'ALL' && selectedCategory === 'ALL'
+              ? 'bg-[#111d2e] text-white dark:bg-slate-100 dark:text-slate-900'
+              : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+          }`}
+        >
+          {language === 'mr' ? 'सर्व अहवाल' : 'All reports'}
+        </button>
+
+        {/* Pending */}
+        <button
+          onClick={() => setFilterTab('PENDING')}
+          className={`px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap ${
+            filterTab === 'PENDING'
+              ? 'bg-[#111d2e] text-white dark:bg-slate-100 dark:text-slate-900'
+              : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+          }`}
+        >
+          {language === 'mr' ? 'प्रलंबित' : 'Pending'}
+        </button>
+
+        {/* Category Dropdown Pill */}
+        <div className="relative">
+          <button
+            onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+            className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-1 whitespace-nowrap"
+          >
+            <span>{selectedCategory === 'ALL' ? 'Category' : selectedCategory}</span>
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+
+          {isCategoryDropdownOpen && (
+            <div className="absolute left-0 mt-2 w-48 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl py-1 z-20">
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setSelectedCategory(cat.id);
+                    setIsCategoryDropdownOpen(false);
+                  }}
+                  className={`w-full px-3.5 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition ${
+                    selectedCategory === cat.id ? 'text-[#d95b18] font-bold' : 'text-slate-700 dark:text-slate-300'
+                  }`}
                 >
-                  <div>
-                    {/* Photo Header */}
-                    <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-950">
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+
+      {/* 5. Feed Items Stream */}
+      <div className="space-y-4 pt-1">
+        {filteredTickets.length === 0 ? (
+          <div className="py-12 text-center text-slate-400 space-y-2">
+            <CheckCircle2 className="w-8 h-8 mx-auto text-slate-300" />
+            <p className="text-sm font-semibold">No complaints found for this filter.</p>
+          </div>
+        ) : (
+          filteredTickets.map((ticket) => {
+            const isUpvoted = upvotedMap[ticket.id];
+            const comments = commentsMap[ticket.id] || [];
+
+            return (
+              <div
+                key={ticket.id}
+                onClick={() => setSelectedTicketForDetails(ticket)}
+                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-[#d95b18]/40 transition cursor-pointer space-y-3.5 group"
+              >
+                {/* Author row */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-full bg-[#fef2ea] border border-[#fae8dc] text-[#d95b18] font-bold text-xs flex items-center justify-center">
+                      {ticket.citizenName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-[13px] font-bold text-[#111d2e] dark:text-slate-100">
+                        {ticket.citizenName}
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {ticket.ward} ward · Citizen report
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={(e) => handleOpenOptions(e, ticket)}
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Category & Status Badges */}
+                <div className="flex items-center justify-between pt-0.5">
+                  <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    {ticket.category === 'POTHOLE' ? 'ROADS' : ticket.category === 'OPEN_MANHOLE' ? 'DRAINAGE' : ticket.category}
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#fef2ea] text-[#d95b18] border border-[#fae8dc]">
+                    Pending Review
+                  </span>
+                </div>
+
+                {/* Title & Location */}
+                <div className="space-y-0.5">
+                  <h3 className="text-[16px] font-bold text-[#111d2e] dark:text-slate-100 leading-snug group-hover:text-[#d95b18] transition-colors">
+                    {ticket.title}
+                  </h3>
+                  <p className="text-[12px] text-slate-500 dark:text-slate-400">
+                    {ticket.locationName}
+                  </p>
+                </div>
+
+                {/* Evidence Card (Exact Figma look) */}
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 p-4 text-center space-y-2">
+                  {ticket.beforeImageUrl && !ticket.beforeImageUrl.includes('placeholder') ? (
+                    <div className="space-y-2">
                       <img
                         src={ticket.beforeImageUrl}
                         alt={ticket.title}
-                        className="w-full h-full object-cover group-hover:scale-103 transition duration-300"
+                        className="w-full max-h-48 object-cover rounded-lg"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
-
-                      <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/95 dark:bg-slate-950/90 text-slate-900 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 shadow-xs">
-                          {ticket.ward}
-                        </span>
-                        {getStatusBadge(ticket)}
-                      </div>
-
-                      <div className="absolute bottom-2 left-2.5 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md text-[10px]">
-                        <Flame className={`w-3 h-3 ${isCritical ? 'text-rose-400' : 'text-amber-400'}`} />
-                        <span className="text-slate-300">Severity:</span>
-                        <span className={`font-black ${isCritical ? 'text-rose-400' : 'text-amber-400'}`}>
-                          {ticket.impactScore}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Content Details */}
-                    <div className="p-4 space-y-2">
-                      <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                        {ticket.title}
-                      </h3>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                      <p className="text-[11px] text-slate-500 line-clamp-2">
                         {ticket.description}
                       </p>
-                      
-                      <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 pt-1 truncate">
-                        <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                        <span className="truncate">{ticket.locationName}</span>
+                    </div>
+                  ) : ticket.id.includes('figma-01') ? (
+                    <div className="space-y-1.5 py-2">
+                      <ImageOff className="w-5 h-5 mx-auto text-slate-400" />
+                      <div className="text-[13px] font-bold text-[#111d2e] dark:text-slate-200">
+                        Submitted photo doesn't match
                       </div>
-
-                      <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
-                        <span className="flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          <span>{ticket.citizenName}</span>
-                        </span>
-                        <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                      <p className="text-[11px] text-slate-500 max-w-xs mx-auto leading-relaxed">
+                        The source image shows preliminary context. Inspect before supporting.
+                      </p>
+                      <div className="text-[9px] font-black text-amber-700 uppercase tracking-wider">
+                        EVIDENCE MISMATCH · NOT VERIFIED
                       </div>
                     </div>
-                  </div>
-
-                  {/* Card Action Footer */}
-                  <div className="p-3 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-1.5 flex-wrap">
-                    
-                    {/* +1 Endorse Button */}
-                    <button
-                      onClick={(e) => handleUpvoteClick(e, ticket.id)}
-                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition transform active:scale-95 ${
-                        isUpvoted
-                          ? 'bg-amber-500 text-slate-950 shadow-xs'
-                          : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
-                      }`}
-                      title="Support this civic issue (+1)"
-                    >
-                      <ThumbsUp className={`w-3.5 h-3.5 ${isUpvoted ? 'fill-current' : ''}`} />
-                      <span>{isUpvoted ? 'Endorsed' : '+1'}</span>
-                      <span className="ml-0.5 px-1.5 py-0.2 rounded-md bg-slate-200/80 dark:bg-black/30 text-[10px]">
-                        {ticket.upvotes + (isUpvoted ? 1 : 0)}
-                      </span>
-                    </button>
-
-                    {/* Social Share Buttons */}
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={(e) => handleShareWhatsApp(e, ticket)}
-                        className="p-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-emerald-500 hover:text-white text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 transition"
-                        title="Share on WhatsApp"
-                      >
-                        <Share2 className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        onClick={(e) => handleShareTwitter(e, ticket)}
-                        className="p-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-sky-500 hover:text-white text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 transition"
-                        title="Tweet to @NMC_Nashik"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        onClick={(e) => handleCopyLink(e, ticket.id)}
-                        className={`p-1.5 rounded-lg transition border ${
-                          copiedId === ticket.id
-                            ? 'bg-emerald-500 text-white border-emerald-500'
-                            : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
-                        }`}
-                        title="Copy Share Link"
-                      >
-                        {copiedId === ticket.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
+                  ) : (
+                    <div className="space-y-1.5 py-2">
+                      <ImageOff className="w-5 h-5 mx-auto text-slate-400" />
+                      <div className="text-[13px] font-bold text-[#111d2e] dark:text-slate-200">
+                        Evidence photo unavailable
+                      </div>
+                      <p className="text-[11px] text-slate-500 max-w-xs mx-auto leading-relaxed">
+                        The original photo is not available here. No replacement proof has been added.
+                      </p>
+                      <div className="text-[9px] font-black text-slate-500 uppercase tracking-wider">
+                        NO SUBMITTED PROOF DISPLAYED
+                      </div>
                     </div>
-
-                    {/* Inspect / Verify Button */}
-                    {isPendingVerification ? (
-                      <button
-                        onClick={() => onInspect(ticket.id)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition"
-                      >
-                        <span>Vote Proof</span>
-                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => onInspect(ticket.id)}
-                        className="flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-500 transition px-2 py-1"
-                      >
-                        <span>Inspect</span>
-                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                      </button>
-                    )}
-                  </div>
-
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        )
-      )}
 
-      {/* ======================================================== */}
-      {/* 3. MUNICIPAL AUDIT TABLE VIEW                            */}
-      {/* ======================================================== */}
-      {viewStyle === 'TABLE' && (
-        <div className="rounded-2xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
-                <tr>
-                  <th className="py-3 px-4 font-bold">Incident / Location</th>
-                  <th className="py-3 px-3 font-bold">Ward</th>
-                  <th className="py-3 px-3 font-bold">Category</th>
-                  <th className="py-3 px-3 font-bold">Status</th>
-                  <th className="py-3 px-3 font-bold">Severity</th>
-                  <th className="py-3 px-3 font-bold">Community +1</th>
-                  <th className="py-3 px-4 font-bold text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900/40">
-                {filteredTickets.map((ticket) => (
-                  <tr
-                    key={ticket.id}
-                    onClick={() => onInspect(ticket.id)}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer"
+                {/* Bottom Action Footer (Exact Figma Screen 1) */}
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
+                  <button
+                    onClick={(e) => handleUpvote(e, ticket.id)}
+                    className={`flex items-center gap-1.5 font-bold transition ${
+                      isUpvoted ? 'text-[#d95b18]' : 'hover:text-[#d95b18]'
+                    }`}
                   >
-                    <td className="py-3 px-4">
-                      <div className="font-bold text-slate-900 dark:text-slate-100">{ticket.title}</div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3 text-amber-500" />
-                        {ticket.locationName}
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 text-slate-700 dark:text-slate-300 font-medium">{ticket.ward}</td>
-                    <td className="py-3 px-3 text-slate-700 dark:text-slate-300">
-                      {ticket.category.replace(/_/g, ' ')}
-                    </td>
-                    <td className="py-3 px-3">{getStatusBadge(ticket)}</td>
-                    <td className="py-3 px-3 font-extrabold text-amber-600 dark:text-amber-400">{ticket.impactScore}</td>
-                    <td className="py-3 px-3 font-semibold text-slate-800 dark:text-slate-200">{ticket.upvotes}</td>
-                    <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onInspect(ticket.id);
-                        }}
-                        className="px-3 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-xs transition"
-                      >
-                        Inspect Proof ➔
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                    <ThumbsUp className={`w-4 h-4 ${isUpvoted ? 'fill-[#d95b18]' : ''}`} />
+                    <span>{ticket.upvotes + (isUpvoted ? 1 : 0)} support</span>
+                  </button>
 
-      {/* Flag As False Report Modal (Anti-Fraud Precaution) */}
-      {flaggingTicket && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
-              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
-                <Flag className="w-5 h-5" />
+                  <div className="flex items-center gap-1.5">
+                    <MessageSquare className="w-4 h-4" />
+                    <span>{comments.length} comments</span>
+                  </div>
+
+                  <button
+                    onClick={(e) => handleShare(e, ticket.id)}
+                    className="p-1 hover:text-[#d95b18] transition"
+                    title="Share report"
+                  >
+                    {copiedId === ticket.id ? <Check className="w-4 h-4 text-emerald-500" /> : <Share2 className="w-4 h-4" />}
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onInspect(ticket.id);
+                    }}
+                    className="p-1 hover:text-[#d95b18] transition"
+                    title="Inspect verification"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </button>
+                </div>
+
               </div>
-              <div>
-                <h3 className="text-base font-black text-slate-900 dark:text-slate-100">Flag as False / Misleading Report</h3>
-                <p className="text-xs text-slate-500">Ticket: #{flaggingTicket.id}</p>
-              </div>
-            </div>
+            );
+          })
+        )}
+      </div>
 
-            <p className="text-xs text-slate-600 dark:text-slate-300">
-              Please specify why this complaint is inaccurate. False complaints will be audited by the NMC Ward Officer before repair dispatch.
-            </p>
-
-            <div className="space-y-2 text-xs">
-              {[
-                { value: 'DUPLICATE_REPORT', label: 'Duplicate report of another active grievance' },
-                { value: 'FAKE_STAGED_PHOTO', label: 'Fake, staged, or downloaded photo evidence' },
-                { value: 'ALREADY_REPAIRED', label: 'Already repaired / No hazard exists here' },
-                { value: 'WRONG_LOCATION', label: 'Wrong location / Ward boundary mismatch' },
-              ].map((opt) => (
-                <label 
-                  key={opt.value} 
-                  className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition ${
-                    flagReason === opt.value 
-                      ? 'bg-rose-500/10 border-rose-500/40 text-rose-800 dark:text-rose-300 font-bold' 
-                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="flagReason"
-                    value={opt.value}
-                    checked={flagReason === opt.value}
-                    onChange={(e) => setFlagReason(e.target.value)}
-                    className="text-rose-600 focus:ring-rose-500"
-                  />
-                  <span>{opt.label}</span>
-                </label>
-              ))}
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => setFlaggingTicket(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmitFlag}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition"
-              >
-                Submit False Report Flag
-              </button>
-            </div>
-          </div>
+      {/* 6. End of Feed Checkmark & CTA (Figma Screen 2) */}
+      <div className="pt-6 pb-2 text-center space-y-3 border-t border-slate-100 dark:border-slate-800">
+        <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-[#111d2e] dark:text-slate-100 flex items-center justify-center mx-auto">
+          <Check className="w-4 h-4 stroke-[2.5]" />
         </div>
-      )}
 
+        <div className="space-y-1">
+          <h4 className="text-[16px] font-bold text-[#111d2e] dark:text-slate-100">
+            {language === 'mr' ? 'तुम्ही सर्व अहवाल पाहिले आहेत.' : `You've seen the ${filteredTickets.length} reports.`}
+          </h4>
+          <p className="text-[12px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+            {language === 'mr'
+              ? 'तुमच्या परिसरात काही दुरुस्ती हवी आहे? केशरी तक्रार बटण नेहमी उपलब्ध आहे.'
+              : 'Noticed something in your neighbourhood? The orange Report button is always within reach.'}
+          </p>
+        </div>
+
+        <div className="pt-1">
+          <button
+            onClick={() => setIsComplaintModalOpen(true)}
+            className="inline-flex items-center gap-1.5 py-2.5 px-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-[#111d2e] dark:text-slate-100 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-xs"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{language === 'mr' ? 'नागरी अहवाल तयार करा' : 'Create a civic report'}</span>
+          </button>
+        </div>
+      </div>
+
+      {renderReportOptionsDrawer()}
     </div>
   );
 }
