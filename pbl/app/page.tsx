@@ -57,6 +57,7 @@ export default function HomePage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [projects, setProjects] = useState<RoadProject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [prefilledComplaint, setPrefilledComplaint] = useState<any>(null);
 
   const fetchData = async () => {
     try {

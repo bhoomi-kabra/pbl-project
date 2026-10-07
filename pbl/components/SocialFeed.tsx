@@ -193,7 +193,7 @@ export default function SocialFeed({ tickets, onUpvote, onInspect, onNavigateToM
 
             {/* Copy link */}
             <button
-              onClick={(e) => handleCopyLink(e, ticketForOptions.id)}
+              onClick={(e) => handleShare(e, ticketForOptions.id)}
               className="w-full flex items-center gap-3.5 py-3 px-3.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60 text-left font-bold text-slate-800 dark:text-slate-200 transition"
             >
               <Link2 className="w-5 h-5 text-slate-700 dark:text-slate-300 shrink-0" />
