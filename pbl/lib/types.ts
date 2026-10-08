@@ -37,7 +37,9 @@ export type RoadWorkPhase =
 export type UserRole =
   | 'CITIZEN'
   | 'WARD_ENGINEER'
-  | 'CONTRACTOR';
+  | 'CONTRACTOR'
+  | 'SUB_ADMIN'
+  | 'SUPER_ADMIN';
 
 export interface AuditEntry {
   id: string;

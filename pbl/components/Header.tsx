@@ -42,7 +42,15 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
   // Dynamic navigation items strictly based on selected role
   let navItems: { id: string; label: string; icon?: any; badgeClass?: string }[] = [];
 
-  if (currentUser?.role === 'WARD_ENGINEER') {
+  if (currentUser?.role === 'SUPER_ADMIN' || currentUser?.email === 'bhoomikabra12@gmail.com') {
+    navItems = [
+      { id: 'superadmin', label: language === 'mr' ? 'आयुक्त नियंत्रण कक्ष' : 'Super Admin', icon: ShieldCheck, badgeClass: 'text-[#d95b18] bg-[#fef2ea]' },
+      { id: 'home', label: t.tabHome, icon: Home },
+      { id: 'feed', label: t.tabFeed, icon: Share2 },
+      { id: 'map', label: t.tabMap, icon: Layers },
+      { id: 'verify', label: t.tabVerify, icon: FileCheck2 },
+    ];
+  } else if (currentUser?.role === 'WARD_ENGINEER' || currentUser?.role === 'SUB_ADMIN') {
     navItems = [
       { id: 'engineer', label: language === 'mr' ? 'अभियंता नियंत्रण कक्ष' : 'Engineer Tower', icon: ShieldCheck, badgeClass: 'text-[#d95b18] bg-[#fef2ea]' },
       { id: 'map', label: t.tabMap, icon: Layers },

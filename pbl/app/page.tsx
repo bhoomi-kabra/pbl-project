@@ -9,6 +9,7 @@ import SocialFeed from '@/components/SocialFeed';
 import VerificationTracker from '@/components/VerificationTracker';
 import EngineerDashboard from '@/components/EngineerDashboard';
 import ContractorDashboard from '@/components/ContractorDashboard';
+import SuperAdminDashboard from '@/components/SuperAdminDashboard';
 import CivicSafetyRules from '@/components/CivicSafetyRules';
 import ChatbotWidget from '@/components/ChatbotWidget';
 import ComplaintModal from '@/components/ComplaintModal';
@@ -215,7 +216,9 @@ export default function HomePage() {
           <LandingOverview 
             onEnterPortal={(tab) => {
               if (tab === 'admin') {
-                if (currentUser?.role === 'WARD_ENGINEER') {
+                if (currentUser?.role === 'SUPER_ADMIN' || currentUser?.email === 'bhoomikabra12@gmail.com') {
+                  setActiveTab('superadmin');
+                } else if (currentUser?.role === 'WARD_ENGINEER' || currentUser?.role === 'SUB_ADMIN') {
                   setActiveTab('engineer');
                 } else if (currentUser?.role === 'CONTRACTOR') {
                   setActiveTab('contractor');
@@ -328,6 +331,15 @@ export default function HomePage() {
               />
             )}
 
+            {/* Super Admin Dashboard (Commissioner View matching mobile screenshot) */}
+            {(activeTab === 'superadmin' || (activeTab === 'admin' && (currentUser?.role === 'SUPER_ADMIN' || currentUser?.email === 'bhoomikabra12@gmail.com'))) && (
+              <SuperAdminDashboard
+                tickets={tickets}
+                onInspectTicket={handleInspectTicket}
+                onNavigateToMap={() => setActiveTab('map')}
+              />
+            )}
+
             {/* 1. NMC Ward Executive Engineer Tower */}
             {activeTab === 'engineer' && (
               <EngineerDashboard
@@ -348,7 +360,7 @@ export default function HomePage() {
             )}
 
             {/* 3. Fallback for legacy admin tab */}
-            {activeTab === 'admin' && (
+            {activeTab === 'admin' && !(currentUser?.role === 'SUPER_ADMIN' || currentUser?.email === 'bhoomikabra12@gmail.com') && (
               currentUser?.role === 'CONTRACTOR' ? (
                 <ContractorDashboard
                   tickets={tickets}
