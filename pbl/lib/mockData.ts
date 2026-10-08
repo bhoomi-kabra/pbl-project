@@ -24,6 +24,14 @@ export const INITIAL_USERS: UserProfile[] = [
     avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=120&q=80',
     role: 'CONTRACTOR',
     ward: 'Nashik West'
+  },
+  {
+    id: '101166305594609285505',
+    name: 'Bhoomi Kabra (Commissioner)',
+    email: 'bhoomikabra12@gmail.com',
+    avatar: 'https://lh3.googleusercontent.com/a/ACg8ocLD1OaUaxg72-Ujj-PBPV4OOgaY1aht-kb_BLO0HdEVExRz7w=s96-c',
+    role: 'SUPER_ADMIN',
+    ward: 'Nashik West'
   }
 ];
 

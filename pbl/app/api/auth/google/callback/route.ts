@@ -25,12 +25,17 @@ export async function GET(request: NextRequest) {
     if (stateRaw) {
       try {
         const parsed = JSON.parse(Buffer.from(stateRaw, 'base64url').toString('utf8'));
-        if (['CITIZEN', 'WARD_ENGINEER', 'CONTRACTOR'].includes(parsed.role)) {
+        if (['CITIZEN', 'WARD_ENGINEER', 'CONTRACTOR', 'SUPER_ADMIN'].includes(parsed.role)) {
           selectedRole = parsed.role;
         }
       } catch {
         // Fallback to default
       }
+    }
+
+    // Force SUPER_ADMIN if bhoomikabra12@gmail.com
+    if (userInfo.email === 'bhoomikabra12@gmail.com') {
+      selectedRole = 'SUPER_ADMIN';
     }
 
     // Prepare profile from Google data
@@ -50,7 +55,13 @@ export async function GET(request: NextRequest) {
     const sessionToken = signSessionToken(savedUser);
 
     // Build redirect response with secure session cookie
-    const targetTab = selectedRole === 'WARD_ENGINEER' ? 'engineer' : selectedRole === 'CONTRACTOR' ? 'contractor' : 'feed';
+    const targetTab = (selectedRole === 'SUPER_ADMIN' || savedUser.role === 'SUPER_ADMIN' || savedUser.email === 'bhoomikabra12@gmail.com')
+      ? 'superadmin'
+      : selectedRole === 'WARD_ENGINEER'
+      ? 'engineer'
+      : selectedRole === 'CONTRACTOR'
+      ? 'contractor'
+      : 'feed';
     const response = NextResponse.redirect(`${origin}/?auth_success=1&tab=${targetTab}`);
     response.cookies.set(SESSION_COOKIE_NAME, sessionToken, {
       httpOnly: true,

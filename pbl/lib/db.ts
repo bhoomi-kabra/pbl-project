@@ -447,6 +447,125 @@ export async function updateProjectPhase(
 }
 
 /**
+ * Super Admin proceeding on a ticket:
+ * update status, assign contractor, issue penalty, or perform supreme override.
+ */
+export async function updateTicketByAdmin(
+  ticketId: string,
+  updates: {
+    status?: TicketStatus;
+    ward?: Ward;
+    category?: any;
+    contractorName?: string;
+    reopenReason?: string;
+    fineIssued?: string;
+    actionNote?: string;
+    performedBy?: string;
+  }
+): Promise<{ success: boolean; ticket: Ticket | null; message: string }> {
+  const now = new Date().toISOString();
+  let ticket: Ticket | null = null;
+
+  const memIdx = memoryTickets.findIndex((t) => t.id === ticketId);
+  if (memIdx >= 0) {
+    const memTkt = memoryTickets[memIdx];
+    if (updates.status) {
+      memTkt.status = updates.status;
+      if (updates.status === 'RESOLVED_BY_CONTRACTOR' || updates.status === 'VERIFICATION_PENDING') {
+        memTkt.resolvedAt = now;
+      }
+      if (updates.status === 'OFFICIALLY_CLOSED') {
+        memTkt.closedAt = now;
+      }
+    }
+    if (updates.ward) memTkt.ward = updates.ward;
+    if (updates.category) memTkt.category = updates.category;
+    if (updates.contractorName) memTkt.contractorName = updates.contractorName;
+    if (updates.reopenReason) memTkt.reopenReason = updates.reopenReason;
+
+    memTkt.auditTrail.push({
+      id: `aud-${Date.now()}`,
+      timestamp: now,
+      action: updates.actionNote || `Admin Proceeding: Status updated to ${updates.status || 'Updated'}`,
+      performedBy: updates.performedBy || 'Municipal Commissioner (Super Admin)',
+      role: 'SUPER_ADMIN',
+      note: updates.fineIssued ? `Statutory Fine Issued: ${updates.fineIssued}` : updates.reopenReason
+    });
+    ticket = memTkt;
+  }
+
+  // Update in Neon PostgreSQL
+  if (sql) {
+    try {
+      await initializeDatabase();
+      const currentRows = await sql`SELECT * FROM tickets WHERE id = ${ticketId} LIMIT 1`;
+      if (currentRows && currentRows.length > 0) {
+        const cur = currentRows[0];
+        const newStatus = updates.status || cur.status;
+        const newContractor = updates.contractorName || cur.contractor_name;
+        const newWard = updates.ward || cur.ward;
+        const newCategory = updates.category || cur.category;
+        const newReason = updates.reopenReason !== undefined ? updates.reopenReason : cur.reopen_reason;
+        const resolvedAt = (newStatus === 'RESOLVED_BY_CONTRACTOR' || newStatus === 'VERIFICATION_PENDING')
+          ? new Date()
+          : (cur.resolved_at ? new Date(cur.resolved_at) : null);
+        const closedAt = newStatus === 'OFFICIALLY_CLOSED'
+          ? new Date()
+          : (cur.closed_at ? new Date(cur.closed_at) : null);
+
+        await sql`
+          UPDATE tickets SET
+            status = ${newStatus},
+            contractor_name = ${newContractor},
+            ward = ${newWard},
+            category = ${newCategory},
+            reopen_reason = ${newReason},
+            resolved_at = ${resolvedAt},
+            closed_at = ${closedAt}
+          WHERE id = ${ticketId}
+        `;
+
+        if (!ticket) {
+          ticket = {
+            id: cur.id,
+            title: cur.title,
+            description: cur.description,
+            category: newCategory,
+            ward: newWard,
+            locationName: cur.location_name,
+            lat: cur.lat,
+            lng: cur.lng,
+            beforeImageUrl: cur.before_image_url,
+            afterImageUrl: cur.after_image_url,
+            status: newStatus,
+            citizenName: cur.citizen_name,
+            citizenEmail: cur.citizen_email,
+            contractorName: newContractor,
+            upvotes: Number(cur.upvotes || 0),
+            confirmVotes: Number(cur.confirm_votes || 0),
+            reopenVotes: Number(cur.reopen_votes || 0),
+            impactScore: Number(cur.impact_score || 0),
+            createdAt: cur.created_at ? new Date(cur.created_at).toISOString() : now,
+            resolvedAt: resolvedAt ? resolvedAt.toISOString() : undefined,
+            closedAt: closedAt ? closedAt.toISOString() : undefined,
+            reopenReason: newReason,
+            auditTrail: []
+          };
+        }
+      }
+    } catch (err: any) {
+      console.warn('Neon ticket admin proceeding error:', err);
+    }
+  }
+
+  return { 
+    success: true, 
+    ticket, 
+    message: `Administrative proceeding logged successfully for complaint ${ticketId}.` 
+  };
+}
+
+/**
  * Upsert user profile upon Google OAuth sign-in.
  */
 export async function upsertUser(user: {
