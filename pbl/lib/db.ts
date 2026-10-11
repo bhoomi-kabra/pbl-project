@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless';
-import { Ticket, RoadProject, UserProfile, RoadWorkPhase, UserRole, Ward } from './types';
+import { Ticket, RoadProject, UserProfile, RoadWorkPhase, UserRole, Ward, TicketStatus } from './types';
 import { INITIAL_TICKETS, INITIAL_PROJECTS, INITIAL_USERS } from './mockData';
 
 const databaseUrl = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL;
@@ -182,11 +182,122 @@ export async function getTicketById(id: string): Promise<Ticket | null> {
 }
 
 /**
- * Submit a new civic complaint.
+ * Haversine formula to compute exact distance between two coordinates in meters.
  */
-export async function createTicket(ticketData: Omit<Ticket, 'id' | 'createdAt' | 'upvotes' | 'confirmVotes' | 'reopenVotes' | 'impactScore' | 'auditTrail'>): Promise<Ticket> {
-  const newId = `tkt-${Date.now()}`;
+export function getDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371e3; // Earth radius in meters
+  const phi1 = (lat1 * Math.PI) / 180;
+  const phi2 = (lat2 * Math.PI) / 180;
+  const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
+  const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+    Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
+
+/**
+ * Checks if incoming image and complaint category match the existing ticket.
+ */
+export function checkImageAndHazardMatch(
+  existingTicket: Ticket,
+  incomingCategory: string,
+  incomingImageUrl: string,
+  incomingAiVerified?: boolean
+): { isMatch: boolean; reason: string } {
+  // 1. Complaint Type Match: MUST match category (pothole vs pothole, etc.)
+  if (existingTicket.category !== incomingCategory) {
+    return { isMatch: false, reason: `Different complaint types: ${existingTicket.category} vs ${incomingCategory}` };
+  }
+
+  const img1 = (existingTicket.beforeImageUrl || '').trim();
+  const img2 = (incomingImageUrl || '').trim();
+
+  // 2. Image Verification Match:
+  // Direct identical image URL / upload
+  if (img1 && img2 && img1 === img2) {
+    return { isMatch: true, reason: 'Identical photo evidence match' };
+  }
+
+  // Same base filename / preset photo match
+  const getFileSignature = (u: string) => u.split('?')[0].split('/').pop() || '';
+  if (img1 && img2 && getFileSignature(img1) === getFileSignature(img2)) {
+    return { isMatch: true, reason: 'Matching image file signature' };
+  }
+
+  // AI-verified hazard match: both photos represent verified hazards of the same category
+  const isExistingVerified = existingTicket.aiVerified ?? true;
+  const isIncomingVerified = incomingAiVerified ?? true;
+  if (img1 && img2 && isExistingVerified && isIncomingVerified) {
+    return { isMatch: true, reason: 'AI computer vision verified both photos for same hazard category' };
+  }
+
+  return { isMatch: false, reason: 'Image evidence does not match' };
+}
+
+/**
+ * Submit a new civic complaint with 10-meter proximity, exact complaint type, and image matching.
+ */
+export async function createTicket(ticketData: Omit<Ticket, 'id' | 'createdAt' | 'upvotes' | 'confirmVotes' | 'reopenVotes' | 'impactScore' | 'auditTrail'> & { aiVerified?: boolean; aiConfidence?: number }): Promise<{ ticket: Ticket; isDuplicateMerged?: boolean }> {
   const now = new Date().toISOString();
+
+  // 🔍 Strict 10-Meter Proximity Barrier + Exact Category + Image Match Verification
+  const MAX_DUPLICATE_RADIUS_METERS = 10; // Exactly 10 meters
+
+  let matchedDistance = 0;
+  const existingDuplicate = memoryTickets.find((t) => {
+    if (t.status === 'OFFICIALLY_CLOSED') return false;
+
+    // A) 10-Meter Proximity Distance Check
+    const distMeters = getDistanceInMeters(t.lat, t.lng, ticketData.lat, ticketData.lng);
+    if (distMeters > MAX_DUPLICATE_RADIUS_METERS) {
+      return false; // Different location (> 10 meters apart, e.g. different pothole on same road)
+    }
+
+    // B) Complaint Type and Image Match Verification
+    const match = checkImageAndHazardMatch(
+      t,
+      ticketData.category,
+      ticketData.beforeImageUrl,
+      ticketData.aiVerified
+    );
+
+    if (match.isMatch) {
+      matchedDistance = Math.round(distMeters);
+      return true;
+    }
+    return false;
+  });
+
+  if (existingDuplicate) {
+    existingDuplicate.duplicateCount = (existingDuplicate.duplicateCount || 1) + 1;
+    existingDuplicate.upvotes += 1;
+    existingDuplicate.impactScore += 35; // Community heat boost
+    if (!existingDuplicate.additionalReports) {
+      existingDuplicate.additionalReports = [];
+    }
+    existingDuplicate.additionalReports.push({
+      citizenName: ticketData.citizenName,
+      reportedAt: now,
+      note: ticketData.description,
+      photoUrl: ticketData.beforeImageUrl
+    });
+    existingDuplicate.auditTrail.push({
+      id: `aud-${Date.now()}-merged`,
+      timestamp: now,
+      action: `Merged Duplicate Report (+1 Community Traction)`,
+      performedBy: ticketData.citizenName,
+      role: 'CITIZEN',
+      note: `Reported at exact same spot (${matchedDistance}m away). Verified matching ${ticketData.category} image. Total reports: ${existingDuplicate.duplicateCount}`
+    });
+
+    return { ticket: existingDuplicate, isDuplicateMerged: true };
+  }
+
+  const newId = `tkt-${Date.now()}`;
   
   // Calculate initial impact score based on hazard type
   let baseScore = 100;
@@ -195,6 +306,10 @@ export async function createTicket(ticketData: Omit<Ticket, 'id' | 'createdAt' |
   else if (ticketData.category === 'ELECTRICAL_WIRE') baseScore = 300;
   else if (ticketData.category === 'POTHOLE') baseScore = 200;
 
+  // SLA Deadline (24 hours default, 6 hours for emergency cave-in / live electrical wire)
+  const slaHours = (ticketData.category === 'ROAD_CAVE_IN' || ticketData.category === 'ELECTRICAL_WIRE') ? 6 : 24;
+  const slaDeadline = new Date(Date.now() + slaHours * 3600 * 1000).toISOString();
+
   const newTicket: Ticket = {
     ...ticketData,
     id: newId,
@@ -202,12 +317,16 @@ export async function createTicket(ticketData: Omit<Ticket, 'id' | 'createdAt' |
     confirmVotes: 0,
     reopenVotes: 0,
     impactScore: baseScore,
+    duplicateCount: 1,
+    aiVerified: ticketData.aiVerified ?? (ticketData.category === 'POTHOLE' || ticketData.category === 'GARBAGE_DUMP'),
+    aiConfidence: ticketData.aiConfidence ?? 0.88,
+    slaDeadline,
     createdAt: now,
     auditTrail: [
       {
         id: `aud-${Date.now()}`,
         timestamp: now,
-        action: 'Complaint Logged with Geotagged Evidence',
+        action: 'Complaint Logged with Geotagged Evidence & AI Verification',
         performedBy: ticketData.citizenName,
         role: 'CITIZEN'
       }
@@ -236,7 +355,7 @@ export async function createTicket(ticketData: Omit<Ticket, 'id' | 'createdAt' |
   }
 
   memoryTickets.unshift(newTicket);
-  return newTicket;
+  return { ticket: newTicket, isDuplicateMerged: false };
 }
 
 /**

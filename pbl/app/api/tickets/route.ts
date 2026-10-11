@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const ticket = await createTicket({
+    const { ticket, isDuplicateMerged } = await createTicket({
       title,
       description,
       category,
@@ -50,10 +50,19 @@ export async function POST(request: NextRequest) {
       beforeImageUrl,
       status: 'SUBMITTED',
       citizenName: citizenName || 'Verified Citizen',
-      citizenEmail: citizenEmail || 'citizen@nashik.gov.in'
+      citizenEmail: citizenEmail || 'citizen@nashik.gov.in',
+      aiVerified: body.aiVerified,
+      aiConfidence: body.aiConfidence
     });
 
-    return NextResponse.json({ success: true, ticket }, { status: 201 });
+    return NextResponse.json({ 
+      success: true, 
+      ticket, 
+      isDuplicateMerged: !!isDuplicateMerged,
+      message: isDuplicateMerged 
+        ? `Merged with active report at exact same spot (within 10m)! Community traction boosted.` 
+        : `Complaint submitted and geotagged successfully.`
+    }, { status: isDuplicateMerged ? 200 : 201 });
   } catch (error) {
     console.error('API POST /api/tickets error:', error);
     return NextResponse.json({ success: false, error: 'Failed to create ticket' }, { status: 500 });

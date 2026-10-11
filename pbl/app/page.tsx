@@ -185,7 +185,13 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (data.success && data.ticket) {
-        setTickets((prev) => [data.ticket, ...prev]);
+        setTickets((prev) => {
+          const exists = prev.find((t) => t.id === data.ticket.id);
+          if (exists) {
+            return prev.map((t) => (t.id === data.ticket.id ? data.ticket : t));
+          }
+          return [data.ticket, ...prev];
+        });
         setActiveTab('feed');
       }
     } catch (err) {
@@ -309,7 +315,7 @@ export default function HomePage() {
                 tickets={tickets}
                 projects={projects}
                 onSelectTicket={handleInspectTicket}
-                onOpenReportModal={(loc) => {
+                onOpenReportModal={(loc: any) => {
                   if (loc) {
                     setPrefilledComplaint({
                       locationName: loc.address,

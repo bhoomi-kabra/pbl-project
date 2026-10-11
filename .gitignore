@@ -23,8 +23,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
+# External cloned repositories
+nagarseva2/
+Nagar-Seva/

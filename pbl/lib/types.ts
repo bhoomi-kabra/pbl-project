@@ -78,6 +78,17 @@ export interface Ticket {
   userVotedUp?: boolean;
   userVotedConfirm?: boolean;
   userVotedReopen?: boolean;
+  duplicateCount?: number;
+  aiVerified?: boolean;
+  aiConfidence?: number;
+  slaDeadline?: string;
+  citizenRating?: number;
+  additionalReports?: {
+    citizenName: string;
+    reportedAt: string;
+    note?: string;
+    photoUrl?: string;
+  }[];
   auditTrail: AuditEntry[];
 }
 

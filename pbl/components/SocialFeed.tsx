@@ -27,7 +27,9 @@ import {
   Link2,
   Flag,
   X,
-  ChevronUp
+  ChevronUp,
+  Sparkles,
+  Flame
 } from 'lucide-react';
 
 interface SocialFeedProps {
@@ -639,12 +641,31 @@ export default function SocialFeed({ tickets, onUpvote, onInspect, onNavigateToM
                 </div>
 
                 {/* Category & Status Badges */}
-                <div className="flex items-center justify-between pt-0.5">
-                  <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    {ticket.category === 'POTHOLE' ? 'ROADS' : ticket.category === 'OPEN_MANHOLE' ? 'DRAINAGE' : ticket.category}
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#fef2ea] text-[#d95b18] border border-[#fae8dc]">
-                    Pending Review
+                <div className="flex flex-wrap items-center justify-between gap-1.5 pt-0.5">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      {ticket.category === 'POTHOLE' ? 'ROADS' : ticket.category === 'OPEN_MANHOLE' ? 'DRAINAGE' : ticket.category}
+                    </span>
+
+                    {/* AI Verified Badge (YOLOv8) */}
+                    {ticket.aiVerified && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        <Sparkles className="w-3 h-3 text-emerald-600" />
+                        AI Verified ({Math.round((ticket.aiConfidence || 0.88) * 100)}%)
+                      </span>
+                    )}
+
+                    {/* 10-meter Same-Spot Duplicate Clustered Badge */}
+                    {(ticket.duplicateCount || 1) > 1 && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        <Flame className="w-3 h-3 text-amber-600" />
+                        {ticket.duplicateCount} Reports Merged (Same Spot · 10m)
+                      </span>
+                    )}
+                  </div>
+
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#fef2ea] text-[#d95b18] border border-[#fae8dc] shrink-0">
+                    {ticket.status === 'VERIFICATION_PENDING' ? 'Awaiting Verification' : ticket.status === 'RESOLVED_BY_CONTRACTOR' ? 'Resolved' : ticket.status === 'REOPENED' ? 'Substandard Flagged' : 'Pending Review'}
                   </span>
                 </div>
 

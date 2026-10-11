@@ -168,6 +168,15 @@ export const INITIAL_TICKETS: Ticket[] = [
     confirmVotes: 1,
     reopenVotes: 0,
     impactScore: 120,
+    duplicateCount: 4,
+    aiVerified: true,
+    aiConfidence: 0.96,
+    slaDeadline: '2025-02-26T10:15:00Z',
+    citizenRating: 5,
+    additionalReports: [
+      { citizenName: 'Anand Shinde', reportedAt: '2025-02-24T11:20:00Z', note: 'Elderly person almost tripped' },
+      { citizenName: 'Priya Joshi', reportedAt: '2025-02-24T13:40:00Z' }
+    ],
     createdAt: '2025-02-24T10:15:00Z',
     resolvedAt: '2025-02-25T16:30:00Z',
     auditTrail: [
@@ -208,6 +217,10 @@ export const INITIAL_TICKETS: Ticket[] = [
     confirmVotes: 0,
     reopenVotes: 0,
     impactScore: 190,
+    duplicateCount: 2,
+    aiVerified: true,
+    aiConfidence: 0.91,
+    slaDeadline: '2025-02-25T11:45:00Z',
     createdAt: '2025-02-24T11:45:00Z',
     auditTrail: [
       {

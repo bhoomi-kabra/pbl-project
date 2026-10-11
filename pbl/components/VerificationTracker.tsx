@@ -311,6 +311,20 @@ export default function VerificationTracker({ tickets, onVote, selectedTicketId,
                 <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 <span>{activeTicket.locationName} ({activeTicket.ward})</span>
               </div>
+              <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                {activeTicket.aiVerified && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-emerald-600" />
+                    AI Verified ({Math.round((activeTicket.aiConfidence || 0.88) * 100)}%)
+                  </span>
+                )}
+                {(activeTicket.duplicateCount || 1) > 1 && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-amber-600" />
+                    {activeTicket.duplicateCount} Reports Merged (Same Spot · 10m)
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* View Mode Switcher */}

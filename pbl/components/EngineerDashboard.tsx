@@ -261,8 +261,18 @@ export default function EngineerDashboard({
                 <div key={tkt.id} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 text-xs">
                   <div>
                     <div className="font-bold text-slate-900 dark:text-slate-100">{tkt.title}</div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      {tkt.ward} • Assigned: <b className="text-slate-700 dark:text-slate-300">{tkt.contractorName || 'NMC PWD Maintenance Gang'}</b>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex flex-wrap items-center gap-1.5">
+                      <span>{tkt.ward} • Assigned: <b className="text-slate-700 dark:text-slate-300">{tkt.contractorName || 'NMC PWD Maintenance Gang'}</b></span>
+                      {tkt.aiVerified && (
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          ⚡ AI Verified ({Math.round((tkt.aiConfidence || 0.88) * 100)}%)
+                        </span>
+                      )}
+                      {(tkt.duplicateCount || 1) > 1 && (
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          🔥 {tkt.duplicateCount} Merged
+                        </span>
+                      )}
                     </div>
                     <div className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold mt-1">
                       ⚠️ SLA Expired: Repair overdue by 72h

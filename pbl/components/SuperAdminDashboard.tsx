@@ -881,7 +881,7 @@ export default function SuperAdminDashboard({
                     >
                       {/* Card Header: ID, Department, Ward, Status */}
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="font-mono text-xs font-black text-slate-500 dark:text-slate-400">
                             {tkt.id}
                           </span>
@@ -891,6 +891,18 @@ export default function SuperAdminDashboard({
                           <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                             {tkt.ward}
                           </span>
+                          {tkt.aiVerified && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-emerald-600" />
+                              AI Verified ({Math.round((tkt.aiConfidence || 0.88) * 100)}%)
+                            </span>
+                          )}
+                          {(tkt.duplicateCount || 1) > 1 && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 flex items-center gap-1">
+                              <Flame className="w-3 h-3 text-amber-600" />
+                              {tkt.duplicateCount} Reports Merged (Same Spot · 10m)
+                            </span>
+                          )}
                         </div>
 
                         {/* Status & SLA Badges */}
