@@ -10,13 +10,13 @@ function getSectorFromCategory(category: string, textPayload: string = ''): stri
   const cat = (category || '').toUpperCase();
   const text = textPayload.toLowerCase();
 
-  if (cat.includes('GARBAGE') || cat.includes('WASTE') || text.includes('garbage') || text.includes('waste') || text.includes('dump') || text.includes('कचरा')) {
+  if (cat.includes('GARBAGE') || cat.includes('WASTE') || text.includes('garbage') || text.includes('waste') || text.includes('dump') || text.includes('trash') || text.includes('litter') || text.includes('debris') || text.includes('कचरा') || text.includes('safai')) {
     return 'SOLID_WASTE';
   }
-  if (cat.includes('MANHOLE') || cat.includes('DRAINAGE') || cat.includes('SEWER') || text.includes('sewer') || text.includes('manhole') || text.includes('drainage') || text.includes('गटर') || text.includes('ड्रेनेज')) {
+  if (cat.includes('MANHOLE') || cat.includes('DRAINAGE') || cat.includes('SEWER') || text.includes('sewer') || text.includes('manhole') || text.includes('drainage') || text.includes('gutter') || text.includes('गटर') || text.includes('ड्रेनेज') || text.includes('मॅनहोल')) {
     return 'DRAINAGE_SEWAGE';
   }
-  if (cat.includes('WIRE') || cat.includes('LIGHT') || cat.includes('ELECTRICAL') || text.includes('light') || text.includes('pole') || text.includes('electricity') || text.includes('wire') || text.includes('लाइट')) {
+  if (cat.includes('WIRE') || cat.includes('LIGHT') || cat.includes('ELECTRICAL') || text.includes('light') || text.includes('pole') || text.includes('electricity') || text.includes('wire') || text.includes('spark') || text.includes('लाइट') || text.includes('तार')) {
     return 'ELECTRICAL';
   }
   if (cat.includes('WATER') || text.includes('water') || text.includes('leak') || text.includes('pipe') || text.includes('पाणी')) {
@@ -97,6 +97,7 @@ export async function POST(req: NextRequest) {
     const { 
       title, 
       description, 
+      category: clientCategory,
       latitude, 
       longitude, 
       ward,
@@ -113,17 +114,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const assignedSector = getSectorFromCategory('', `${title} ${description}`);
+    const assignedSector = getSectorFromCategory(clientCategory || '', `${title} ${description}`);
     const newId = `tkt-${Date.now()}`;
     const defaultWard = ward || 'Panchavati';
     const locName = locationName || `Nashik (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
 
-    // Map sector to ticket category
-    let category = 'POTHOLE';
-    if (assignedSector === 'SOLID_WASTE') category = 'GARBAGE_DUMP';
-    else if (assignedSector === 'DRAINAGE_SEWAGE') category = 'OPEN_MANHOLE';
-    else if (assignedSector === 'ELECTRICAL') category = 'ELECTRICAL_WIRE';
-    else if (assignedSector === 'WATER_SUPPLY') category = 'WATER_LEAKAGE';
+    // Map sector to ticket category (prefer clientCategory if explicitly provided)
+    let category = clientCategory || 'POTHOLE';
+    if (!clientCategory) {
+      if (assignedSector === 'SOLID_WASTE') category = 'GARBAGE_DUMP';
+      else if (assignedSector === 'DRAINAGE_SEWAGE') category = 'OPEN_MANHOLE';
+      else if (assignedSector === 'ELECTRICAL') category = 'ELECTRICAL_WIRE';
+      else if (assignedSector === 'WATER_SUPPLY') category = 'WATER_LEAKAGE';
+    }
 
     const insertTicketQuery = `
       INSERT INTO tickets (

@@ -158,7 +158,7 @@ app.get('/api/complaints', async (req, res) => {
  * @desc    Citizen logs a new complaint. Keyword engine routes to sector.
  */
 app.post('/api/complaints', authenticateToken, authorizeRoles('CITIZEN'), async (req, res) => {
-  const { title, description, latitude, longitude, ward, locationName, beforeImageUrl } = req.body;
+  const { title, description, category: clientCategory, latitude, longitude, ward, locationName, beforeImageUrl } = req.body;
   const citizenName = req.user?.username || 'Verified Citizen';
   const citizenEmail = req.user?.email || 'citizen@nashik.gov.in';
 
@@ -167,12 +167,12 @@ app.post('/api/complaints', authenticateToken, authorizeRoles('CITIZEN'), async 
     return;
   }
 
-  const assignedSector = getSectorFromCategory('', `${title} ${description}`);
+  const assignedSector = getSectorFromCategory(clientCategory || '', `${title} ${description}`);
   const newId = `tkt-${Date.now()}`;
   const defaultWard = ward || 'Panchavati';
   const locName = locationName || `Nashik (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
 
-  let category = 'POTHOLE';
+  let category = clientCategory || 'POTHOLE';
   if (assignedSector === 'SOLID_WASTE') category = 'GARBAGE_DUMP';
   else if (assignedSector === 'DRAINAGE_SEWAGE') category = 'OPEN_MANHOLE';
   else if (assignedSector === 'ELECTRICAL') category = 'ELECTRICAL_WIRE';
